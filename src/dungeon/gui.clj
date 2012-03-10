@@ -1,6 +1,5 @@
 (ns dungeon.gui
-  (:use dungeon.game-state
-        dungeon.dungeon)
+  (:use dungeon.game-state)
   (:import [javax.swing JFrame JPanel SwingUtilities]
            [java.awt Graphics Color Dimension]
            [java.awt.event KeyEvent KeyListener]))

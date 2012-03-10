@@ -1,36 +1,34 @@
 (ns dungeon.game-state
   (:use dungeon.player
-        dungeon.dungeon
         dungeon.location)
-  (:require [midje.sweet :as t]))
+  (:require [dungeon.dungeon :as dungeon]
+            [midje.sweet :as t]))
 
 (defrecord GameState [dungeon player])
 
 (defn make-game-state [& {:keys [dungeon player]}]
   (GameState. dungeon player))
 
-(defn read-map [dungeon-string]
-  (if (string? dungeon-string)
-    (read-map (clojure.string/split dungeon-string #"\n"))
-    (let [dungeon (make-dungeon :floor (read-dungeon dungeon-string))
-          player-location (read-player-location dungeon-string)
-          player (make-player :location player-location)]
-      (make-game-state :dungeon dungeon :player player))))
+(defn read-game-state [dungeon-strings]
+  (let [dungeon (dungeon/read-dungeon dungeon-strings)
+        player (read-player dungeon-strings)]
+    (make-game-state :dungeon dungeon
+                     :player player)))
 
 (defmethod player-location GameState [state]
   (player-location (get state :player)))
 
-(defmethod dungeon-floor GameState [state]
-  (dungeon-floor (:dungeon state)))
+(defn dungeon-floor [state]
+  (dungeon/dungeon-floor (:dungeon state)))
 
-(defmethod height GameState [state]
-  (height (:dungeon state)))
+(defn height [state]
+  (dungeon/height (:dungeon state)))
 
-(defmethod width GameState [state]
-  (width (:dungeon state)))
+(defn width [state]
+  (dungeon/width (:dungeon state)))
 
-(defn state->vec  [state]
-  (let [dungeon (dungeon-floor state)]
+(defn state->vec [state]
+  (let [dungeon (dungeon/dungeon->vec (:dungeon state))]
     (if-let [location (player-location state)]
       (update-in dungeon
                  [(row location)]
@@ -45,10 +43,9 @@
             \# :wall})
 
 (defn tile-at [state location]
-  (let [row (row location)
-        col (col location)]
-    (let [c (get-in (state->vec state) [row col])]
-      (tiles c))))
+  (if (= (player-location state) location)
+    :player
+    (dungeon/tile-at (:dungeon state) location)))
 
 (defn- in-dungeon? [state location]
   (let [h (height state)
@@ -70,44 +67,55 @@
                     :player false
                     :wall false})
 
-(defn- movable? [state location]
+(defn- can-move-to? [state location]
   (and (in-dungeon? state location)
        (movable-tile? (tile-at state location))))
 
 (defn- set-player-location [game-state location]
-  (if (movable? game-state location)
+  (if (can-move-to? game-state location)
     (assoc-in game-state [:player :location] location)
     game-state))
+
+(defn has-creature? [game-state location]
+  (dungeon/has-creature? (:dungeon game-state) location))
+
+(defn kill-creature [game-state location]
+  (update-in game-state
+             [:dungeon]
+             (fn [dungeon]
+               (dungeon/remove-creature dungeon location))))
 
 (defn move-player [game-state direction]
   (let [delta (direction directions)
         new-location (add-delta (player-location game-state) delta)]
-    (set-player-location game-state new-location)))
+    (if (has-creature? game-state new-location)
+      (kill-creature game-state new-location)
+      (set-player-location game-state new-location))))
 
 (t/fact
- (player-location (read-map "...\n.@.")) => [1 1]
- (player-location (read-map [".@."])) => [0 1]
- (player-location (read-map ["@.."])) => [0 0]
- (player-location (read-map ["..." ".@."])) => [1 1]
- (player-location (read-map ["..."])) => nil)
+ (player-location (read-game-state ["..." ".@."])) => [1 1]
+ (player-location (read-game-state [".@."])) => [0 1]
+ (player-location (read-game-state ["@.."])) => [0 0]
+ (player-location (read-game-state ["..." ".@."])) => [1 1]
+ (player-location (read-game-state ["..."])) => nil)
 (t/fact
- (player-location (move-player (read-map ".@.")
+ (player-location (move-player (read-game-state [".@."])
                                :west)) => [0 0]
- (player-location (move-player (read-map ["..." "@.."])
+ (player-location (move-player (read-game-state ["..." "@.."])
                                :north)) => [0 0]
- (player-location (move-player (read-map "@..")
+                               (player-location (move-player (read-game-state ["@.."])
                                :west)) => [0 0])
 (t/fact
- (state->vec (read-map "...")) => ["..."]
- (state->vec (read-map ".@.")) => [".@."]
- (state->vec (read-map "@..")) => ["@.."])
+ (state->vec (read-game-state ["..."])) => ["..."]
+ (state->vec (read-game-state [".@."])) => [".@."]
+ (state->vec (read-game-state ["@.."])) => ["@.."])
 (t/fact
- (tile-at (read-map "...")
+ (tile-at (read-game-state ["..."])
           (make-location :row 0 :col 0)) => :floor
- (tile-at (read-map ".@.")
+ (tile-at (read-game-state [".@."])
           (make-location :row 0 :col 1)) => :player)
 
-(let [state (read-map "#@..#")]
+(let [state (read-game-state ["#@..#"])]
   (t/fact
    (height state) => 1
    (width state) => 5)
@@ -121,3 +129,11 @@
    (tile-at state [0 2]) => :floor
    (tile-at state [0 1]) => :player
    (tile-at state [0 0]) => :wall))
+
+(let [state (read-game-state ["#M@.#"])]
+  (t/fact
+   (state->vec state) => ["#M@.#"])
+  (t/fact
+   (state->vec (kill-creature state [0 1])) => ["#.@.#"])
+  (t/fact
+   (state->vec (move-player state :west)) => ["#.@.#"]))

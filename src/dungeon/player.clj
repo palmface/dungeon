@@ -4,17 +4,17 @@
 
 (defrecord Player [location])
 
-(defn read-player-location [rows]
+(defn make-player
+  [& {:keys [location]}]
+  (Player. location))
+
+(defn read-player [dungeon-strings]
   (let [player-column (fn [row] (.indexOf row "@"))
         contains-player? (fn [row] (>= (player-column row) 0))
         location-if-exists (fn [row-number row]
                              (if (contains-player? row)
                                [row-number (player-column row)]))]
-    (some-indexed location-if-exists rows)))
-
-(defn make-player
-  [& {:keys [location]}]
-  (Player. location))
+    (make-player :location (some-indexed location-if-exists dungeon-strings))))
 
 (defmulti player-location type)
 
@@ -22,7 +22,6 @@
   (get player :location))
 
 (t/fact
- (read-player-location ["..."]) => nil
- (read-player-location [".@."]) => [0 1]
- (read-player-location ["..." "@.."]) => [1 0]
- (read-player-location ["#@.." "...."]) => [0 1])
+ (player-location (read-player [".@."])) => [0 1]
+ (player-location (read-player ["..." "@.."])) => [1 0]
+ (player-location (read-player ["#@.." "...."])) => [0 1])
