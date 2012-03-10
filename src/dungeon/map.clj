@@ -56,21 +56,23 @@
          (< row h)
          (< col w))))
 
+(def directions
+  {:north [-1 0]
+   :east [0 1]
+   :south [1 0]
+   :west [0 -1]})
+
 (defn move-player [dungeon-state direction]
-  (let [deltas {:north [-1 0]
-                :east [0 1]
-                :south [1 0]
-                :west [0 -1]}
-        delta (direction deltas)]
+  (let [delta (direction directions)
+        update-location-if-valid
+          (fn [location]
+            (let [new-location (vec (map + location delta))]
+              (if (in-dungeon? (dungeon dungeon-state) new-location)
+                new-location
+                location)))]
     (update-in dungeon-state
                [:player-location]
-               (fn [[row col]]
-                 (let [new-location [(+ row (first delta))
-                                     (+ col (second delta))]]
-                   (if (in-dungeon? (dungeon dungeon-state)
-                                    new-location)
-                     new-location
-                     [row col]))))))
+               update-location-if-valid)))
 
 (t/fact
  (player-location (read-map "...\n.@.")) => [1 1]
