@@ -1,31 +1,53 @@
-function assert(expr, msg) {
-  if (expr === false) {
-    console.log(msg);
+var url = 'api/';
+
+function createWorldUpdater(world, canvas) {
+  return function(data) {
+    world.updateWorld(data);
+    clearCanvas(canvas);
+    world.draw(canvas);
   }
 }
 
-function draw(ctx) {
-  ctx.fillStyle = "rgb(200,0,0)";
-  ctx.fillRect (10, 10, 55, 50);
+function clearCanvas(canvas) {
+  var ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
-  ctx.fillRect (30, 30, 55, 50);
+  ctx.save();
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.restore();
+}
+
+function createData(action) {
+  var d = { "action": action };
+  console.log(d);
+  return d;
+}
+
+function sendAction(action, world, canvas) {
+  /*
+  $.ajax({ type: 'POST',
+    url: url,
+    data: $.param(createData(action)),
+    dataType: 'json',
+    contentType: "application/json; charset=utf-8",
+    success: createWorldUpdater(world, canvas)
+  });
+  */
+  $.getJSON(url + action, {}, createWorldUpdater(world, canvas));
 }
 
 function createKeyDownHandler(world, canvas) {
   return function(e) {
     if (e.keyIdentifier == "Left") {
-      world.crawler.move(LEFT);
-      world.redraw(canvas);
+      sendAction("west", world, canvas);
     } else if (e.keyIdentifier == "Right") {
-      world.crawler.move(RIGHT);
-      world.redraw(canvas);
+      sendAction("east", world, canvas);
     } else if (e.keyIdentifier == "Up") {
-      world.crawler.move(UP);
-      world.redraw(canvas);
+      sendAction("north", world, canvas);
     } else if (e.keyIdentifier == "Down") {
-      world.crawler.move(DOWN);
-      world.redraw(canvas);
+      sendAction("south", world, canvas);
     }
   }
 }
@@ -35,8 +57,7 @@ function init() {
   if (!canvas.getContext) {
     throw("unable to get canvas context");
   }
-  var crawler = new Crawler(5,5);
-  var world = new World(canvas.width, canvas.height, crawler);
+  var world = new World();
   document.onkeydown = createKeyDownHandler(world, canvas);
 }
 
