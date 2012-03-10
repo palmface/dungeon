@@ -1,6 +1,7 @@
 (ns dungeon.game-state
   (:use dungeon.player
-        dungeon.dungeon)
+        dungeon.dungeon
+        dungeon.location)
   (:require [midje.sweet :as t]))
 
 (defrecord GameState [dungeon player])
@@ -30,11 +31,13 @@
 
 (defn state->vec  [state]
   (let [dungeon (dungeon-floor state)]
-    (if-let [[row col] (player-location state)]
+    (if-let [location (player-location state)]
       (update-in dungeon
-                 [row]
+                 [(row location)]
                  (fn [row-str]
-                   (apply str (assoc (vec row-str) col \@))))
+                   (apply str (assoc (vec row-str)
+                                (col location)
+                                \@))))
       dungeon)))
 
 (def tiles {\@ :player
@@ -42,12 +45,16 @@
             \# :wall})
 
 (defn tile-at [state location]
-  (let [c (get-in (state->vec state) location)]
-    (tiles c)))
+  (let [row (row location)
+        col (col location)]
+    (let [c (get-in (state->vec state) [row col])]
+      (tiles c))))
 
-(defn- in-dungeon? [state [row col]]
+(defn- in-dungeon? [state location]
   (let [h (height state)
-        w (width state)]
+        w (width state)
+        row (row location)
+        col (col location)]
     (and (>= row 0)
          (>= col 0)
          (< row h)
@@ -67,14 +74,14 @@
   (and (in-dungeon? state location)
        (movable-tile? (tile-at state location))))
 
-(defn- set-player-location [game-state [row col :as location]]
+(defn- set-player-location [game-state location]
   (if (movable? game-state location)
     (assoc-in game-state [:player :location] location)
     game-state))
 
 (defn move-player [game-state direction]
   (let [delta (direction directions)
-        new-location (vec (map + (player-location game-state) delta))]
+        new-location (add-delta (player-location game-state) delta)]
     (set-player-location game-state new-location)))
 
 (t/fact
@@ -95,8 +102,10 @@
  (state->vec (read-map ".@.")) => [".@."]
  (state->vec (read-map "@..")) => ["@.."])
 (t/fact
- (tile-at (read-map "...") [0 0]) => :floor
- (tile-at (read-map ".@.") [0 1]) => :player)
+ (tile-at (read-map "...")
+          (make-location :row 0 :col 0)) => :floor
+ (tile-at (read-map ".@.")
+          (make-location :row 0 :col 1)) => :player)
 
 (let [state (read-map "#@..#")]
   (t/fact
