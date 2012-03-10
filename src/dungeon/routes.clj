@@ -2,7 +2,8 @@
   (:use compojure.core
         dungeon.views
         dungeon.game-store
-        dungeon.map
+        dungeon.game-state
+        dungeon.dungeon
         ring.middleware.json-params
         [hiccup.middleware :only (wrap-base-url)])
   (:require [compojure.route :as route]
@@ -40,6 +41,5 @@
 
 
 (def dung
-  (->
-   (handler/site dungeon-routes)
-   (wrap-base-url)))
+  (-> dungeon-routes
+      wrap-json-params))
