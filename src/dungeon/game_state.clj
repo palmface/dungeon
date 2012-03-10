@@ -18,9 +18,6 @@
 (defmethod player-location GameState [state]
   (player-location (get state :player)))
 
-(defn dungeon-floor [state]
-  (dungeon/dungeon-floor (:dungeon state)))
-
 (defn height [state]
   (dungeon/height (:dungeon state)))
 

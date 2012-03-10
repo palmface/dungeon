@@ -9,7 +9,8 @@
 
 (def color-for {:player Color/red
                 :floor  Color/gray
-                :wall Color/black})
+                :wall Color/black
+                :monster Color/green})
 
 (defn- draw-tile [[row col :as location] dungeon-state graphics]
   (doto graphics
