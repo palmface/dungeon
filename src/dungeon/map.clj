@@ -132,3 +132,17 @@
  (tile-at (read-map "...") [0 0]) => :floor
  (tile-at (read-map ".@.") [0 1]) => :player)
 
+(let [state (read-map "#@..#")]
+  (t/fact
+   (height state) => 1
+   (width state) => 5)
+  (t/fact
+   (player-location (move-player state :east)) => [0 2])
+  (t/fact
+   (player-location (move-player state :west)) => [0 1])
+  (t/fact
+   (state->vec state) => ["#@..#"])
+  (t/fact
+   (tile-at state [0 2]) => :floor
+   (tile-at state [0 1]) => :player
+   (tile-at state [0 0]) => :wall))
