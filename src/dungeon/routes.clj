@@ -28,9 +28,16 @@
     (json-response {:width width :height height :contents contents})))
 
 
+(defn simple-logging-middleware [app]
+  (fn [req]
+    (println "\n")
+    (println req)
+    (app req)))
+
+
 (defroutes player-routes
   (GET "/" [] (map->json (get-map))) ; Get current map information
-  (PUT "/" [action] (map->json (update-location action))) ; Move player to given location
+  (POST "/" [action] () (map->json (update-location action))) ; Move player to given location
   (route/not-found "duh"))
 
 (defroutes dungeon-routes
@@ -42,4 +49,5 @@
 
 (def dung
   (-> dungeon-routes
+      simple-logging-middleware
       wrap-json-params))
