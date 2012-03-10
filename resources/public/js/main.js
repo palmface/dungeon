@@ -1,8 +1,8 @@
-var url = 'dummy.json';
+var url = 'api/';
 
 function createWorldUpdater(world, canvas) {
   return function(data) {
-    world.update(data);
+    world.updateWorld(data);
     clearCanvas(canvas);
     world.draw(canvas);
   }
@@ -47,8 +47,7 @@ function init() {
   if (!canvas.getContext) {
     throw("unable to get canvas context");
   }
-  var crawler = new Crawler(5,5);
-  var world = new World(canvas.width, canvas.height, crawler);
+  var world = new World();
   document.onkeydown = createKeyDownHandler(world, canvas);
 }
 

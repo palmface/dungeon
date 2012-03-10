@@ -10,7 +10,7 @@
 (defn blob [game-state]
   (for [column (range (width game-state))
         row (range (height game-state))]
-    (let [tile (tile-at game-state [column row])]
+    (let [tile (tile-at game-state [row column])]
       {:x column :y row :type tile})))
 
 
@@ -23,13 +23,12 @@
 
 (defroutes player-routes
   (GET "/" [] (map->json (map/read-map "..@.."))) ; Get current map information
-  (PUT "/" [] ()) ; Move player to given location
+  (PUT "/" [] (map->json (map/read-map "..@.."))) ; Get current map information
   (route/not-found "duh"))
 
 (defroutes dungeon-routes
   (context "/api" [] player-routes)
   (GET "/" [] (canvas-page))
-  (PUT "/dummy.json" [] "{}")
   (route/resources "/")
   (route/not-found "Page not found"))
 
