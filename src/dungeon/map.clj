@@ -16,42 +16,76 @@
 (defn read-dungeon [rows]
   (vec (map (fn [row] (.replace row \@ \.)) rows)))
 
+(defrecord Player [location])
+
+(defn make-player [& {:keys [location]}]
+  (Player. location))
+
+(defrecord GameState [dungeon player])
+
+(defn make-game-state [& {:keys [dungeon player]}]
+  (GameState. dungeon player))
+
+(defrecord Dungeon [floor])
+
+(defn make-dungeon [& {:keys [floor]}]
+  (Dungeon. floor))
+
 (defn read-map [dungeon-string]
-  (let [dungeon-string (if (string? dungeon-string)
-                         (clojure.string/split dungeon-string #"\n")
-                         dungeon-string)
-        dungeon (read-dungeon dungeon-string)
-        player-location (read-player-location dungeon-string)]
-    {:dungeon dungeon
-     :player-location player-location}))
+  (if (string? dungeon-string)
+    (read-map (clojure.string/split dungeon-string #"\n"))
+    (let [dungeon (make-dungeon :floor (read-dungeon dungeon-string))
+          player-location (read-player-location dungeon-string)
+          player (make-player :location player-location)]
+      (make-game-state :dungeon dungeon :player player))))
 
-(defn player-location [dungeon-state]
-  (:player-location dungeon-state))
+(defmulti player-location type)
 
-(defn dungeon [dungeon-state]
-  (:dungeon dungeon-state))
+(defmethod player-location Player [player]
+  (get player :location))
 
-(defn height [dungeon-state]
-  (count (dungeon dungeon-state)))
+(defmethod player-location GameState [state]
+  (player-location (get state :player)))
 
-(defn width [dungeon-state]
-  (count (first (dungeon dungeon-state))))
+(defmulti dungeon-floor type)
 
-(defn dungeon->str [dungeon]
-  (clojure.string/join "\n" dungeon))
+(defmethod dungeon-floor Dungeon [dungeon]
+  (:floor dungeon))
 
-(defn tile-at [dungeon-state [row col]]
-  (if (= (player-location dungeon-state) [row col])
-    :player
-    :floor))
+(defmethod dungeon-floor GameState [state]
+  (dungeon-floor (:dungeon state)))
 
-(defn state->vec  [dungeon-state]
-  (let [dungeon (dungeon dungeon-state)
-        [row col] (player-location dungeon-state)]
-    (update-in dungeon
-               [row]
-               (fn [row-str]
-                 (apply str (assoc (vec row-str) col \@))))))
+(defmulti height type)
+(defmulti width type)
+
+(defmethod height Dungeon [dungeon]
+  (count (:floor dungeon)))
+
+(defmethod height GameState [state]
+  (height (:dungeon state)))
+
+(defmethod width Dungeon [dungeon]
+  (count (first (:floor dungeon))))
+
+(defmethod width GameState [state]
+  (width (:dungeon state)))
+
+(defn state->vec  [state]
+  (let [dungeon (dungeon-floor state)]
+    (if-let [[row col] (player-location state)]
+      (update-in dungeon
+                 [row]
+                 (fn [row-str]
+                   (apply str (assoc (vec row-str) col \@))))
+      dungeon)))
+
+(def tiles {\@ :player
+            \. :floor
+            \# :wall})
+
+(defn tile-at [state location]
+  (let [c (get-in (state->vec state) location)]
+    (tiles c)))
 
 (defn- in-dungeon? [dungeon-state [row col]]
   (let [h (height dungeon-state)
@@ -67,17 +101,23 @@
    :south [1 0]
    :west [0 -1]})
 
-(defn move-player [dungeon-state direction]
+(def movable-tile? {:floor true
+                    :player false
+                    :wall false})
+
+(defn- movable? [state location]
+  (and (in-dungeon? state location)
+       (movable-tile? (tile-at state location))))
+
+(defn- set-player-location [game-state [row col :as location]]
+  (if (movable? game-state location)
+    (assoc-in game-state [:player :location] location)
+    game-state))
+
+(defn move-player [game-state direction]
   (let [delta (direction directions)
-        update-location-if-valid
-          (fn [location]
-            (let [new-location (vec (map + location delta))]
-              (if (in-dungeon? dungeon-state new-location)
-                new-location
-                location)))]
-    (update-in dungeon-state
-               [:player-location]
-               update-location-if-valid)))
+        new-location (vec (map + (player-location game-state) delta))]
+    (set-player-location game-state new-location)))
 
 (t/fact
  (player-location (read-map "...\n.@.")) => [1 1]
@@ -85,10 +125,6 @@
  (player-location (read-map ["@.."])) => [0 0]
  (player-location (read-map ["..." ".@."])) => [1 1]
  (player-location (read-map ["..."])) => nil)
-(t/fact
- (dungeon->str (dungeon (read-map [".@."]))) => "..."
- (dungeon->str (dungeon (read-map ["..." "..."]))) => "...\n..."
- (dungeon->str (dungeon (read-map [".@." "..."]))) => "...\n...")
 (t/fact
  (height (read-map "...")) => 1
  (height (read-map "...\n...")) => 2
@@ -102,8 +138,24 @@
  (player-location (move-player (read-map "@..")
                                :west)) => [0 0])
 (t/fact
+ (state->vec (read-map "...")) => ["..."]
  (state->vec (read-map ".@.")) => [".@."]
  (state->vec (read-map "@..")) => ["@.."])
 (t/fact
  (tile-at (read-map "...") [0 0]) => :floor
  (tile-at (read-map ".@.") [0 1]) => :player)
+
+(let [state (read-map "#@..#")]
+  (t/fact
+   (height state) => 1
+   (width state) => 5)
+  (t/fact
+   (player-location (move-player state :east)) => [0 2])
+  (t/fact
+   (player-location (move-player state :west)) => [0 1])
+  (t/fact
+   (state->vec state) => ["#@..#"])
+  (t/fact
+   (tile-at state [0 2]) => :floor
+   (tile-at state [0 1]) => :player
+   (tile-at state [0 0]) => :wall))
