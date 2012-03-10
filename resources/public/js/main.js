@@ -19,13 +19,23 @@ function clearCanvas(canvas) {
   ctx.restore();
 }
 
+function createData(action) {
+  var d = { "action": action };
+  console.log(d);
+  return d;
+}
+
 function sendAction(action, world, canvas) {
-  $.ajax({ type: "PUT",
+  /*
+  $.ajax({ type: 'POST',
     url: url,
-    data: { action: action },
+    data: $.param(createData(action)),
     dataType: 'json',
+    contentType: "application/json; charset=utf-8",
     success: createWorldUpdater(world, canvas)
-  })
+  });
+  */
+  $.getJSON(url + action, {}, createWorldUpdater(world, canvas));
 }
 
 function createKeyDownHandler(world, canvas) {

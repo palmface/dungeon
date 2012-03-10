@@ -41,7 +41,6 @@
   (GET "/east" [action] (map->json (update-location "east")))
   (GET "/south" [action] (map->json (update-location "south")))
   (GET "/north" [action] (map->json (update-location "north")))
-  (POST "/" [action] (map->json (update-location action))) ; Move player to given location
   (route/not-found "duh"))
 
 (defroutes dungeon-routes
