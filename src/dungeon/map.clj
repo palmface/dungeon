@@ -53,9 +53,9 @@
                (fn [row-str]
                  (apply str (assoc (vec row-str) col \@))))))
 
-(defn- in-dungeon? [dungeon [row col]]
-  (let [h (height dungeon)
-        w (width dungeon)]
+(defn- in-dungeon? [dungeon-state [row col]]
+  (let [h (height dungeon-state)
+        w (width dungeon-state)]
     (and (>= row 0)
          (>= col 0)
          (< row h)
@@ -72,7 +72,7 @@
         update-location-if-valid
           (fn [location]
             (let [new-location (vec (map + location delta))]
-              (if (in-dungeon? (dungeon dungeon-state) new-location)
+              (if (in-dungeon? dungeon-state new-location)
                 new-location
                 location)))]
     (update-in dungeon-state
