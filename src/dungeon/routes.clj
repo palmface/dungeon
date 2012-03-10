@@ -1,29 +1,35 @@
 (ns dungeon.routes
   (:use compojure.core
         dungeon.views
-        [dungeon.map :as map]
+        dungeon.game-store
+        dungeon.map
+        ring.middleware.json-params
         [hiccup.middleware :only (wrap-base-url)])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.data.json :as json]))
 
-(defn blob [game-state]
+(defn map-tiles [game-state]
   (for [column (range (width game-state))
         row (range (height game-state))]
-    (let [tile (tile-at game-state [column row])]
+    (let [tile (tile-at game-state [row column])]
       {:x column :y row :type tile})))
 
+(defn json-response [data & [status]]
+  {:status (or status 200)
+   :headers {"Content-Type" "application/json"}
+   :body (json/json-str data)})
 
 (defn map->json [map-state]
-  (let [width (map/width map-state)
-        height (map/height map-state)
-        contents (blob map-state)]
-    (json/json-str {:width width :height height :contents contents})))
+  (let [width (width map-state)
+        height (height map-state)
+        contents (map-tiles map-state)]
+    (json-response {:width width :height height :contents contents})))
 
 
 (defroutes player-routes
-  (GET "/" [] (map->json (map/read-map "..@.."))) ; Get current map information
-  (PUT "/" [] ()) ; Move player to given location
+  (GET "/" [] (map->json (get-map))) ; Get current map information
+  (PUT "/" [action] (map->json (update-location action))) ; Move player to given location
   (route/not-found "duh"))
 
 (defroutes dungeon-routes
