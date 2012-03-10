@@ -1,18 +1,19 @@
 (ns dungeon.gui
+  (:use dungeon.map)
   (:import [javax.swing JFrame JPanel SwingUtilities]
            [java.awt Graphics Color Dimension]
-           [java.awt.event KeyListener]))
+           [java.awt.event KeyEvent KeyListener]))
 
 (def cell-width 15)
 (def cell-height 15)
 
-(def- color-for {:player Color/red
-                 :floor  Color/grey})
+(def color-for {:player Color/red
+                :floor  Color/gray})
 
 (defn- draw-tile [[row col :as location] dungeon-state graphics]
   (doto graphics
     (.setColor (color-for (tile-at dungeon-state location)))
-    (fill-rect (* col cell-width) (* row cell-height)
+    (.fillRect (* col cell-width) (* row cell-height)
                cell-width         cell-height)))
 
 (defn- draw-state [dungeon-state graphics]
@@ -24,11 +25,11 @@
   (fn [dungeon-state]
     (move-player dungeon-state direction)))
 
-(def- action-for
-  {\w (move :north)
-   \a (move :west)
-   \s (move :north)
-   \d (move :east)})
+(def action-for
+  {KeyEvent/VK_W (move :north)
+   KeyEvent/VK_A (move :west)
+   KeyEvent/VK_S (move :south)
+   KeyEvent/VK_D (move :east)})
 
 (defn- make-canvas-proxy [dungeon-state]
   (proxy [JPanel KeyListener] []
@@ -39,24 +40,33 @@
       (Dimension. (* cell-width (width @dungeon-state))
                   (* cell-height (height @dungeon-state))))
     (keyPressed [event]
-      (let [key (.getKeyChar event)
+      (let [key (.getKeyCode event)
             action (action-for key)]
         (swap! dungeon-state action)
-        (.repaint this)))))
+        (.repaint this)))
+    (keyReleased [event])
+    (keyTyped [event])))
+
+(defn- make-canvas [state]
+  (let [canvas (make-canvas-proxy state)]
+    (.addKeyListener canvas canvas)
+    canvas))
 
 (defn- make-frame []
   (JFrame. "EPIC DUNGEON"))
 
 (defn- make-window [state]
   (let [frame (make-frame)
-        canvas (make-canvas-proxy state)]
+        canvas (make-canvas state)]
     (doto frame
       (.setContentPane canvas)
       (.pack)
-      (.show))))
+      (.show))
+    (.requestFocusInWindow canvas)
+    frame))
 
 (defn- make-game [state]
   (make-window (atom state)))
 
 (defn run-game [state]
-  (SwingUtilities/invokeLater (fn [] make-game state)))
+  (SwingUtilities/invokeLater (fn [] (make-game state))))
