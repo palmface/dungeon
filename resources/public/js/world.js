@@ -22,6 +22,7 @@ World.prototype.clearCanvas = function(canvas) {
 
 World.prototype.update = function(data) {
   console.log("world update");
+  console.log(data);
 }
 
 World.prototype.redraw = function(canvas) {

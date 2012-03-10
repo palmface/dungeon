@@ -7,16 +7,26 @@ function createWorldUpdater(world, canvas) {
   }
 }
 
+function sendAction(action, world, canvas) {
+  $.ajax({ type: "PUT",
+    url: url,
+    data: { action: action },
+    dataType: 'json',
+    success: createWorldUpdater(world, canvas)
+  })
+}
+
 function createKeyDownHandler(world, canvas) {
   return function(e) {
     if (e.keyIdentifier == "Left") {
-      $.getJSON(url, {}, createWorldUpdater(world, canvas));
+      sendAction("west", world, canvas);
     } else if (e.keyIdentifier == "Right") {
-      $.getJSON(url, {}, createWorldUpdater(world, canvas));
+      sendAction("east", world, canvas);
     } else if (e.keyIdentifier == "Up") {
-      $.getJSON(url, {}, createWorldUpdater(world, canvas));
+      sendAction("north", world, canvas);
     } else if (e.keyIdentifier == "Down") {
-      $.getJSON(url, {}, createWorldUpdater(world, canvas));
+      sendAction("south", world, canvas);
+      //$.getJSON(url, {}, createWorldUpdater(world, canvas));
     }
   }
 }

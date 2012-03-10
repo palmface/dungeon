@@ -11,6 +11,7 @@
 (defroutes dungeon-routes
   (context "/api" [] player-routes)
   (GET "/" [] (canvas-page))
+  (PUT "/dummy.json" [] "{}")
   (route/resources "/")
   (route/not-found "Page not found"))
 
