@@ -40,6 +40,11 @@
 (defn dungeon->str [dungeon]
   (clojure.string/join "\n" dungeon))
 
+(defn tile-at [dungeon-state [row col]]
+  (if (= (player-location dungeon-state) [row col])
+    :player
+    :floor))
+
 (defn state->vec  [dungeon-state]
   (let [dungeon (dungeon dungeon-state)
         [row col] (player-location dungeon-state)]
@@ -99,3 +104,6 @@
 (t/fact
  (state->vec (read-map ".@.")) => [".@."]
  (state->vec (read-map "@..")) => ["@.."])
+(t/fact
+ (tile-at (read-map "...") [0 0]) => :floor
+ (tile-at (read-map ".@.") [0 1]) => :player)
