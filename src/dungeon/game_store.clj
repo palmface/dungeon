@@ -1,7 +1,7 @@
 (ns dungeon.game-store
   (:use dungeon.game-state))
 
-(def game (atom (read-map "..@..\n.....\n.....")))
+(def game (atom (read-map (slurp "map.txt"))))
 
 (defn get-map []
   @game)
