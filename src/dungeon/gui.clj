@@ -8,7 +8,8 @@
 (def cell-height 15)
 
 (def color-for {:player Color/red
-                :floor  Color/gray})
+                :floor  Color/gray
+                :wall Color/black})
 
 (defn- draw-tile [[row col :as location] dungeon-state graphics]
   (doto graphics
