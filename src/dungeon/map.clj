@@ -31,11 +31,11 @@
 (defn dungeon [dungeon-state]
   (:dungeon dungeon-state))
 
-(defn height [dungeon]
-  (count dungeon))
+(defn height [dungeon-state]
+  (count (dungeon dungeon-state)))
 
-(defn width [dungeon]
-  (count (first dungeon)))
+(defn width [dungeon-state]
+  (count (first (dungeon dungeon-state))))
 
 (defn dungeon->str [dungeon]
   (clojure.string/join "\n" dungeon))
@@ -85,10 +85,10 @@
  (dungeon->str (dungeon (read-map ["..." "..."]))) => "...\n..."
  (dungeon->str (dungeon (read-map [".@." "..."]))) => "...\n...")
 (t/fact
- (height (dungeon (read-map "..."))) => 1
- (height (dungeon (read-map "...\n..."))) => 2
- (width (dungeon (read-map "..."))) => 3
- (width (dungeon (read-map "...\n..."))) => 3)
+ (height (read-map "...")) => 1
+ (height (read-map "...\n...")) => 2
+ (width (read-map "...")) => 3
+ (width (read-map "...\n...")) => 3)
 (t/fact
  (player-location (move-player (read-map ".@.")
                                :west)) => [0 0]
