@@ -20,6 +20,10 @@ World.prototype.clearCanvas = function(canvas) {
   ctx.restore();
 }
 
+World.prototype.update = function(data) {
+  console.log("world update");
+}
+
 World.prototype.redraw = function(canvas) {
   var ctx = canvas.getContext('2d');
   this.clearCanvas(canvas);
