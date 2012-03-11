@@ -3,7 +3,6 @@
         dungeon.views
         dungeon.game-store
         dungeon.location
-        ring.middleware.json-params
         [hiccup.middleware :only (wrap-base-url)])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -52,5 +51,4 @@
 
 (def dung
   (-> dungeon-routes
-      simple-logging-middleware
-      wrap-json-params))
+      simple-logging-middleware))
