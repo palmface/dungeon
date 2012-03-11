@@ -2,12 +2,14 @@
 var FLOOR = 1;
 var PLAYER = 2;
 
-function World() {
-  this.width = 10;
-  this.height = 10;
-  this.tileSize = 50;
-  this.crawler = new Crawler(5,5);
-  this.contents = new Array(100);
+function World(canvasWidth, canvasHeight) {
+  this.canvasWidth = canvasWidth;
+  this.canvasHeight = canvasHeight;
+  this.mapWidth = 1;
+  this.mapHeight = 1;
+  this.tileSize = 1;
+  this.crawler = new Crawler(0,0);
+  this.contents = new Array(this.mapWidth*this.mapHeight);
 }
 
 World.prototype.drawFloor = function(ctx, x, y) {
@@ -20,12 +22,13 @@ World.prototype.index = function(x, y) {
 }
 
 World.prototype.updateWorld = function(data) {
-  if (this.width*this.height < data.width*data.height) {
+  if (this.mapWidth*this.mapHeight < data.width*data.height) {
     this.contents = new Array(data.width*data.height);
   }
 
-  this.width = data.width;
-  this.height = data.height;
+  this.tileSize = Math.min(this.canvasWidth, this.canvasHeight)/Math.max(this.mapWidth, this.mapHeight);
+  this.mapWidth = data.width;
+  this.mapHeight = data.height;
   for (i in data.contents)
     this.updateObject(data.contents[i]);
 }
@@ -43,8 +46,8 @@ World.prototype.updateObject = function(o) {
 World.prototype.draw = function(canvas) {
   var ctx = canvas.getContext('2d');
 
-  for (y = 0; y < this.height*this.tileSize; y += this.tileSize) {
-    for (x = 0; x < this.width*this.tileSize; x += this.tileSize) {
+  for (y = 0; y < this.mapHeight*this.tileSize; y += this.tileSize) {
+    for (x = 0; x < this.mapWidth*this.tileSize; x += this.tileSize) {
       this.drawFloor(ctx, x, y);
     }
   }

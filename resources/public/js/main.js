@@ -19,22 +19,7 @@ function clearCanvas(canvas) {
   ctx.restore();
 }
 
-function createData(action) {
-  var d = { "action": action };
-  console.log(d);
-  return d;
-}
-
 function sendAction(action, world, canvas) {
-  /*
-  $.ajax({ type: 'POST',
-    url: url,
-    data: $.param(createData(action)),
-    dataType: 'json',
-    contentType: "application/json; charset=utf-8",
-    success: createWorldUpdater(world, canvas)
-  });
-  */
   $.getJSON(url + action, {}, createWorldUpdater(world, canvas));
 }
 
@@ -57,7 +42,7 @@ function init() {
   if (!canvas.getContext) {
     throw("unable to get canvas context");
   }
-  var world = new World();
+  var world = new World(canvas.width, canvas.height);
   document.onkeydown = createKeyDownHandler(world, canvas);
 }
 
