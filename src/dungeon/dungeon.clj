@@ -8,6 +8,7 @@
 (def make-content {\# :wall
                    \m (monster/make-monster :hp 1 :type :monster)
                    \M (monster/make-monster :hp 2 :type :Monster)
+                   \i :item
                    \. :floor})
 
 (defn make-dungeon [& {:keys [height width tile-contents]}]
@@ -44,6 +45,32 @@
    (has-monster? dungeon [0 1]) => t/truthy
    (has-monster? dungeon [1 1]) => t/truthy))
 
+(defn has-item? [dungeon location]
+  (= :item (get-in dungeon [:tile-contents location])))
+
+(let [dungeon (read-dungeon [".i." "ii."])]
+  (t/fact
+   (has-item? dungeon [0 0]) => t/falsey
+   (has-item? dungeon [0 1]) => t/truthy
+   (has-item? dungeon [1 1]) => t/truthy))
+
+(defn pick-item [dungeon location]
+  (if (has-item? dungeon location)
+    (assoc-in dungeon
+              [:tile-contents location]
+              :floor)
+    dungeon))
+
+(let [dungeon (read-dungeon ["mi." "ii."])]
+  (t/fact
+   "pick-item picks items"
+   (has-item? (pick-item dungeon [0 0]) [0 0]) => t/falsey
+   (has-item? (pick-item dungeon [0 1]) [0 1]) => t/falsey
+   (has-item? (pick-item dungeon [1 1]) [1 0]) => t/truthy)
+  (t/fact
+   "pick-item does not pick anything else"
+   (has-monster? (pick-item dungeon [0 0]) [0 0]) => t/truthy))
+
 (defn tile-at [dungeon location]
   (if (has-monster? dungeon location)
     (:type ((:tile-contents dungeon) location))
@@ -51,7 +78,7 @@
 
 
 (let [dungeon (read-dungeon ["..."])
-      odungeon (read-dungeon ["#M@m"])]
+      odungeon (read-dungeon ["#M@mi"])]
   (t/fact
    (tile-at dungeon [0 0]) => :floor
    (tile-at dungeon [0 1]) => :floor
@@ -60,9 +87,11 @@
    (tile-at odungeon [0 0]) => :wall
    (tile-at odungeon [0 1]) => :Monster
    (tile-at odungeon [0 2]) => :floor
-   (tile-at odungeon [0 3]) => :monster))
+   (tile-at odungeon [0 3]) => :monster
+   (tile-at odungeon [0 4]) => :item))
 
 (def content-char {:floor \.
+                   :item \i
                    :wall \#
                    :Monster \M
                    :monster \m})
@@ -75,7 +104,7 @@
               (content-char (tile-at dungeon [row col])))))))
 
 (t/fact
- (dungeon->vec (read-dungeon [".#M." ".#MM"])) => [".#M." ".#MM"]
+ (dungeon->vec (read-dungeon [".#Mi" ".#MM"])) => [".#Mi" ".#MM"]
  (dungeon->vec (read-dungeon [".#@M."])) => [".#.M."])
 
 (defn attack-creature [dungeon location damage]

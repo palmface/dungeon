@@ -10,6 +10,8 @@
 (defn col [[_ col]]
   col)
 
+(defmulti location type)
+
 (defn add-delta [[row col] [row-delta col-delta]]
   (make-location :row (+ row row-delta)
                  :col (+ col col-delta)))

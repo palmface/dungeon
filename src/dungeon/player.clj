@@ -17,16 +17,16 @@
         player-location (some-indexed location-if-exists dungeon-strings)]
     (make-player :location player-location)))
 
-(defn player-location [player]
-  (get player :location))
+(defn location [player]
+  (:location player))
 
 (defn damage [player]
   (:damage player))
 
 (t/fact
- (player-location (read-player [".@."])) => [0 1]
- (player-location (read-player ["..." "@.."])) => [1 0]
- (player-location (read-player ["#@.." "...."])) => [0 1])
+ (location (read-player [".@."])) => [0 1]
+ (location (read-player ["..." "@.."])) => [1 0]
+ (location (read-player ["#@.." "...."])) => [0 1])
 
 (t/fact "player has given damage"
   (damage (make-player :location [0 1] :damage 3)) => 3)

@@ -19,7 +19,7 @@
   (:player state))
 
 (defn player-location [state]
-  (player/player-location (player state)))
+  (player/location (:player state)))
 
 (defn height [state]
   (get-in state [:dungeon :height]))
@@ -37,10 +37,6 @@
                                 (location/col location)
                                 \@))))
       dungeon)))
-
-(def tiles {\@ :player
-            \. :floor
-            \# :wall})
 
 (defn tile-at [state location]
   (if (= (player-location state) location)
@@ -63,7 +59,8 @@
    :south [1 0]
    :west [0 -1]})
 
-(def valid-move-target? {:floor true})
+(def valid-move-target? {:floor true
+                         :item true})
 
 (defn- can-move-to? [state location]
   (and (in-dungeon? state location)
@@ -77,11 +74,30 @@
 (defn has-creature? [game-state location]
   (dungeon/has-monster? (:dungeon game-state) location))
 
+(let [dungeon (read-game-state [".Mim@"])]
+  (t/fact
+   (has-creature? dungeon [0 0]) => t/falsey
+   (has-creature? dungeon [0 1]) => t/truthy
+   (has-creature? dungeon [0 2]) => t/falsey
+   (has-creature? dungeon [0 3]) => t/truthy
+   (has-creature? dungeon [0 4]) => t/falsey))
+
 (defn attack-creature [game-state location damage]
   (update-in game-state
              [:dungeon]
              (fn [dungeon]
                (dungeon/attack-creature dungeon location damage))))
+
+(defn has-item? [game-state location]
+  (dungeon/has-item? (:dungeon game-state)
+                     location))
+
+(defn pick-item [game-state]
+  (update-in game-state
+             [:dungeon]
+             (fn [dungeon]
+               (dungeon/pick-item dungeon
+                                  (player-location game-state)))))
 
 (defn move-player [game-state direction]
   (let [player (player game-state)
@@ -90,6 +106,18 @@
     (if (has-creature? game-state new-location)
       (attack-creature game-state new-location (player/damage player))
       (set-player-location game-state new-location))))
+
+(let [dungeon (read-game-state [".i@"])]
+  (t/fact
+   (state->vec (move-player dungeon :west)) => [".@."]
+   (state->vec (move-player (move-player dungeon :west)
+                            :west)) => ["@i."]))
+
+(let [dungeon (move-player (read-game-state ["i@"]) :west)]
+  (t/fact
+   (has-item? dungeon [0 0]) => t/truthy
+   (has-item? (pick-item dungeon) [0 0]) => t/falsey
+   (has-item? (move-player (pick-item dungeon) :east) [0 0]) => t/falsey))
 
 (t/fact
  (player-location (read-game-state ["..." ".@."])) => [1 1]

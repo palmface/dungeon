@@ -9,6 +9,7 @@
 
 (def color-for {:player Color/red
                 :floor  Color/gray
+                :item Color/blue
                 :wall Color/black
                 :monster Color/green
                 :Monster Color/yellow})
@@ -32,7 +33,8 @@
   {KeyEvent/VK_W (move :north)
    KeyEvent/VK_A (move :west)
    KeyEvent/VK_S (move :south)
-   KeyEvent/VK_D (move :east)})
+   KeyEvent/VK_D (move :east)
+   KeyEvent/VK_E gs/pick-item})
 
 (defn- make-canvas-proxy [dungeon-state]
   (proxy [JPanel KeyListener] []
