@@ -10,4 +10,6 @@
           (include-js "/js/crawler.js")
           (include-js "/js/world.js")]
          [:body {:onload "init();"}
+          [:audio {:id "bg-music" :loop "loop"}
+           [:source {:src "music.mp3"}]]
           [:canvas {:id "dungeon", :width 640, :height 480}]]))

@@ -43,6 +43,8 @@ function init() {
     throw("unable to get canvas context");
   }
   var world = new World(canvas.width, canvas.height);
+    
+  $("#bg-music").get(0).play(); 
   sendAction("", world, canvas);
   sendAction("", world, canvas);
   document.onkeydown = createKeyDownHandler(world, canvas);
