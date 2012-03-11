@@ -74,13 +74,7 @@
     game-state))
 
 (defn has-creature? [game-state location]
-  (dungeon/has-creature? (:dungeon game-state) location))
-
-(defn kill-creature [game-state location]
-  (update-in game-state
-             [:dungeon]
-             (fn [dungeon]
-               (dungeon/remove-creature dungeon location))))
+  (dungeon/has-monster? (:dungeon game-state) location))
 
 (defn attack-creature [game-state location]
   (update-in game-state
