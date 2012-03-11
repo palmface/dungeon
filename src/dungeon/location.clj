@@ -17,4 +17,5 @@
 (let [loc (make-location :row 0 :col 1)]
   (t/fact
    (row loc) => 0
-   (col loc) => 1))
+   (col loc) => 1
+   (add-delta loc [1 1]) => [1 2]))
