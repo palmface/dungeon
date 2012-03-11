@@ -1,6 +1,7 @@
 (ns dungeon.dungeon
   (:use dungeon.utils
-        [midje.sweet :as t]))
+        [midje.sweet :as t])
+  (:require [dungeon.monster :as monster]))
 
 (defrecord Dungeon [height width tile-contents])
 
@@ -25,17 +26,18 @@
                   :width width
                   :tile-contents tile-contents)))
 
-(t/fact
- (read-dungeon ["..."]) => (make-dungeon :height 1
-                                         :width 3
-                                         :tile-contents {[0 0] :floor
-                                                         [0 1] :floor
-                                                         [0 2] :floor})
- (read-dungeon ["#M@"]) => (make-dungeon :height 1
-                                         :width 3
-                                         :tile-contents {[0 0] :wall
-                                                         [0 1] :monster
-                                                         [0 2] :floor}))
+(let [dungeon (read-dungeon ["..."])]
+  (t/fact
+   (read-dungeon ["..."]) => (make-dungeon :height 1
+                                           :width 3
+                                           :tile-contents {[0 0] :floor
+                                                           [0 1] :floor
+                                                           [0 2] :floor})
+   (read-dungeon ["#M@"]) => (make-dungeon :height 1
+                                           :width 3
+                                           :tile-contents {[0 0] :wall
+                                                           [0 1] :monster
+                                                           [0 2] :floor})))
 
 (defn height [dungeon]
   (:height dungeon))

@@ -1,7 +1,7 @@
 (ns dungeon.game-state
-  (:use dungeon.player
-        dungeon.location)
+  (:use dungeon.location)
   (:require [dungeon.dungeon :as dungeon]
+            [dungeon.player :as player]
             [midje.sweet :as t]))
 
 (defrecord GameState [dungeon player])
@@ -11,12 +11,12 @@
 
 (defn read-game-state [dungeon-strings]
   (let [dungeon (dungeon/read-dungeon dungeon-strings)
-        player (read-player dungeon-strings)]
+        player (player/read-player dungeon-strings)]
     (make-game-state :dungeon dungeon
                      :player player)))
 
-(defmethod player-location GameState [state]
-  (player-location (get state :player)))
+(defn player-location [state]
+  (player/player-location (get state :player)))
 
 (defn height [state]
   (dungeon/height (:dungeon state)))
