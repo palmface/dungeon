@@ -1,5 +1,5 @@
 (ns dungeon.gui
-  (:use dungeon.game-state)
+  (:require [dungeon.game-state :as gs])
   (:import [javax.swing JFrame JPanel SwingUtilities]
            [java.awt Graphics Color Dimension]
            [java.awt.event KeyEvent KeyListener]))
@@ -15,18 +15,18 @@
 
 (defn- draw-tile [[row col :as location] dungeon-state graphics]
   (doto graphics
-    (.setColor (color-for (tile-at dungeon-state location)))
+    (.setColor (color-for (gs/tile-at dungeon-state location)))
     (.fillRect (* col cell-width) (* row cell-height)
                cell-width         cell-height)))
 
 (defn- draw-state [dungeon-state graphics]
-  (doseq [row (range (height dungeon-state))
-          col (range (width dungeon-state))]
+  (doseq [row (range (gs/height dungeon-state))
+          col (range (gs/width dungeon-state))]
     (draw-tile [row col] dungeon-state graphics)))
 
 (defn move [direction]
   (fn [dungeon-state]
-    (move-player dungeon-state direction)))
+    (gs/move-player dungeon-state direction)))
 
 (def action-for
   {KeyEvent/VK_W (move :north)
@@ -40,8 +40,8 @@
       (do (proxy-super paintComponent graphics)
         (draw-state @dungeon-state graphics)))
     (getPreferredSize [] 
-      (Dimension. (* cell-width (width @dungeon-state))
-                  (* cell-height (height @dungeon-state))))
+      (Dimension. (* cell-width (gs/width @dungeon-state))
+                  (* cell-height (gs/height @dungeon-state))))
     (keyPressed [event]
       (let [key (.getKeyCode event)
             action (action-for key identity)]

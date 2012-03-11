@@ -1,5 +1,5 @@
 (ns dungeon.monster
-  (:use [midje.sweet :as t]))
+  (:require [midje.sweet :as t]))
 
 (defrecord Monster [hp type])
 

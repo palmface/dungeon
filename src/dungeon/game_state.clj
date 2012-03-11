@@ -1,6 +1,6 @@
 (ns dungeon.game-state
-  (:use dungeon.location)
-  (:require [dungeon.dungeon :as dungeon]
+  (:require [dungeon.location :as location]
+            [dungeon.dungeon :as dungeon]
             [dungeon.player :as player]
             [midje.sweet :as t]))
 
@@ -28,10 +28,10 @@
   (let [dungeon (dungeon/dungeon->vec (:dungeon state))]
     (if-let [location (player-location state)]
       (update-in dungeon
-                 [(row location)]
+                 [(location/row location)]
                  (fn [row-str]
                    (apply str (assoc (vec row-str)
-                                (col location)
+                                (location/col location)
                                 \@))))
       dungeon)))
 
@@ -47,8 +47,8 @@
 (defn- in-dungeon? [state location]
   (let [h (height state)
         w (width state)
-        row (row location)
-        col (col location)]
+        row (location/row location)
+        col (location/col location)]
     (and (>= row 0)
          (>= col 0)
          (< row h)
@@ -90,7 +90,7 @@
 
 (defn move-player [game-state direction]
   (let [delta (direction directions)
-        new-location (add-delta (player-location game-state) delta)]
+        new-location (location/add-delta (player-location game-state) delta)]
     (if (has-creature? game-state new-location)
       (attack-creature game-state new-location)
       (set-player-location game-state new-location))))
@@ -113,10 +113,8 @@
  (state->vec (read-game-state [".@."])) => [".@."]
  (state->vec (read-game-state ["@.."])) => ["@.."])
 (t/fact
- (tile-at (read-game-state ["..."])
-          (make-location :row 0 :col 0)) => :floor
- (tile-at (read-game-state [".@."])
-          (make-location :row 0 :col 1)) => :player)
+ (tile-at (read-game-state ["..."]) [0 0]) => :floor
+ (tile-at (read-game-state [".@."]) [0 1]) => :player)
 
 (let [state (read-game-state ["#@..#"])]
   (t/fact

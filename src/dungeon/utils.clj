@@ -1,5 +1,5 @@
 (ns dungeon.utils
-  (:use [midje.sweet :as t]))
+  (:require [midje.sweet :as t]))
 
 (defn some-indexed [pred coll]
   (some (fn [[i x]] (pred i x))

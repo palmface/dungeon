@@ -1,6 +1,6 @@
 (ns dungeon.player
-  (:use [midje.sweet :as t]
-        [dungeon.utils :only [some-indexed]]))
+  (:use [dungeon.utils :only [some-indexed]])
+  (:require [midje.sweet :as t]))
 
 (defrecord Player [location])
 

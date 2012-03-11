@@ -1,5 +1,5 @@
 (ns dungeon.location
-  (:use [midje.sweet :as t]))
+  (:require [midje.sweet :as t]))
 
 (defn make-location [& {:keys [row col]}]
   [row col])

@@ -1,7 +1,7 @@
 (ns dungeon.dungeon
-  (:use dungeon.utils
-        [midje.sweet :as t])
-  (:require [dungeon.monster :as monster]))
+  (:use [dungeon.utils :only [with-coordinates]])
+  (:require [dungeon.monster :as monster]
+            [midje.sweet :as t]))
 
 (defrecord Dungeon [height width tile-contents])
 
@@ -38,9 +38,9 @@
 
 (let [dungeon (read-dungeon [".M." "MM."])]
   (t/fact
-   (has-creature? dungeon [0 0]) => falsey
-   (has-creature? dungeon [0 1]) => truthy
-   (has-creature? dungeon [1 1]) => truthy))
+   (has-creature? dungeon [0 0]) => t/falsey
+   (has-creature? dungeon [0 1]) => t/truthy
+   (has-creature? dungeon [1 1]) => t/truthy))
 
 (defn tile-at [dungeon location]
   (if (has-creature? dungeon location)
