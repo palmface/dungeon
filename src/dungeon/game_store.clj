@@ -1,12 +1,14 @@
 (ns dungeon.game-store
-  (:use dungeon.game-state))
+  (:require [dungeon.game-state :as gs]))
 
-(def game (atom (read-map (slurp "map.txt"))))
+(defn read-map-file []
+  (vec (clojure.string/split-lines (slurp "map.txt"))))
+
+(def game (atom (gs/read-game-state (read-map-file))))
 
 (defn get-map []
   @game)
 
 (defn update-location [action]
   (let [action-sym (keyword action)]
-    (println action)
-    (swap! game move-player action-sym)))
+    (swap! game gs/move-player action-sym)))
