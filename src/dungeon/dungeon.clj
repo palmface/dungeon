@@ -6,8 +6,8 @@
 (defrecord Dungeon [height width tile-contents])
 
 (def make-content {\# :wall
-                   \m (monster/make-monster :hp 1)
-                   \M (monster/make-monster :hp 2)
+                   \m (monster/make-monster :hp 1 :type :monster)
+                   \M (monster/make-monster :hp 2 :type :Monster)
                    \. :floor})
 
 (defn make-dungeon [& {:keys [height width tile-contents]}]
@@ -44,7 +44,7 @@
 
 (defn tile-at [dungeon location]
   (if (has-creature? dungeon location)
-    :monster
+    (:type ((:tile-contents dungeon) location))
     ((:tile-contents dungeon) location)))
 
 (let [dungeon (read-dungeon ["..."])
@@ -55,12 +55,13 @@
    (tile-at dungeon [0 2]) => :floor)
   (t/fact
    (tile-at odungeon [0 0]) => :wall
-   (tile-at odungeon [0 1]) => :monster
+   (tile-at odungeon [0 1]) => :Monster
    (tile-at odungeon [0 2]) => :floor))
 
 (def content-char {:floor \.
                    :wall \#
-                   :monster \M})
+                   :Monster \M
+                   :monster \m})
 
 (defn dungeon->vec [dungeon]
   (vec
@@ -77,7 +78,7 @@
   (t/fact
    (tile-at dungeon [0 0]) => :floor
    (tile-at dungeon [0 1]) => :wall
-   (tile-at dungeon [0 2]) => :monster
+   (tile-at dungeon [0 2]) => :Monster
    (tile-at dungeon [0 4]) => :floor))
 
 (defn dungeon-floor [dungeon]
@@ -113,5 +114,5 @@
 (let [dungeon (read-dungeon ["M.#"])
       odungeon (read-dungeon ["m.#"])]
   (t/fact
-   (tile-at (attack-creature dungeon [0 0]) [0 0]) => :monster
+   (tile-at (attack-creature dungeon [0 0]) [0 0]) => :Monster
    (tile-at (attack-creature odungeon [0 0]) [0 0]) => :floor))
