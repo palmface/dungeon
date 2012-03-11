@@ -8,5 +8,5 @@
   :dev-dependencies [[midje "1.3.1"]
                      [lein-midje "[1.0.0,)"]
                      [lein-ring "0.5.4"]]
-  :ring {:handler dungeon.routes/dung})
-
+  :ring {:handler dungeon.routes/dung}
+  :main dungeon.core)

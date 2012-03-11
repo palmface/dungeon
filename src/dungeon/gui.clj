@@ -9,7 +9,8 @@
 
 (def color-for {:player Color/red
                 :floor  Color/gray
-                :wall Color/black})
+                :wall Color/black
+                :monster Color/green})
 
 (defn- draw-tile [[row col :as location] dungeon-state graphics]
   (doto graphics
@@ -42,7 +43,7 @@
                   (* cell-height (height @dungeon-state))))
     (keyPressed [event]
       (let [key (.getKeyCode event)
-            action (action-for key)]
+            action (action-for key identity)]
         (swap! dungeon-state action)
         (.repaint this)))
     (keyReleased [event])
