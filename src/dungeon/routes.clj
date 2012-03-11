@@ -22,8 +22,8 @@
    :body (json/json-str data)})
 
 (defn map->json [map-state]
-  (let [width (width map-state)
-        height (height map-state)
+  (let [width (gs/width map-state)
+        height (gs/height map-state)
         contents (map-tiles map-state)]
     (json-response {:width width :height height :contents contents})))
 
