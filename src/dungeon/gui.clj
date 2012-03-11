@@ -43,7 +43,7 @@
                   (* cell-height (height @dungeon-state))))
     (keyPressed [event]
       (let [key (.getKeyCode event)
-            action (action-for key)]
+            action (action-for key identity)]
         (swap! dungeon-state action)
         (.repaint this)))
     (keyReleased [event])
