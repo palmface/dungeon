@@ -43,6 +43,8 @@ function init() {
     throw("unable to get canvas context");
   }
   var world = new World(canvas.width, canvas.height);
+  sendAction("", world, canvas);
+  sendAction("", world, canvas);
   document.onkeydown = createKeyDownHandler(world, canvas);
 }
 
