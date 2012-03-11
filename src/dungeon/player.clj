@@ -16,9 +16,7 @@
                                [row-number (player-column row)]))]
     (make-player :location (some-indexed location-if-exists dungeon-strings))))
 
-(defmulti player-location type)
-
-(defmethod player-location dungeon.player.Player [player]
+(defn player-location [player]
   (get player :location))
 
 (t/fact
