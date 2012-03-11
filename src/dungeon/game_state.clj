@@ -60,13 +60,11 @@
    :south [1 0]
    :west [0 -1]})
 
-(def movable-tile? {:floor true
-                    :player false
-                    :wall false})
+(def valid-move-target? {:floor true})
 
 (defn- can-move-to? [state location]
   (and (in-dungeon? state location)
-       (movable-tile? (tile-at state location))))
+       (valid-move-target? (tile-at state location))))
 
 (defn- set-player-location [game-state location]
   (if (can-move-to? game-state location)
