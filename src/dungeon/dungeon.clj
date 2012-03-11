@@ -6,7 +6,8 @@
 (defrecord Dungeon [height width tile-contents])
 
 (def make-content {\# :wall
-                   \M (monster/make-monster :hp 1)
+                   \m (monster/make-monster :hp 1)
+                   \M (monster/make-monster :hp 2)
                    \. :floor})
 
 (defn make-dungeon [& {:keys [height width tile-contents]}]
@@ -32,8 +33,19 @@
 (defn width [dungeon]
   (:width dungeon))
 
+(defn has-creature? [dungeon loc]
+  (monster/monster? ((:tile-contents dungeon) loc)))
+
+(let [dungeon (read-dungeon [".M." "MM."])]
+  (t/fact
+   (has-creature? dungeon [0 0]) => falsey
+   (has-creature? dungeon [0 1]) => truthy
+   (has-creature? dungeon [1 1]) => truthy))
+
 (defn tile-at [dungeon location]
-  ((:tile-contents dungeon) location))
+  (if (has-creature? dungeon location)
+    :monster
+    ((:tile-contents dungeon) location)))
 
 (let [dungeon (read-dungeon ["..."])
       odungeon (read-dungeon ["#M@"])]
@@ -79,15 +91,6 @@
    (width dungeon13) => 3
    (width dungeon23) => 3))
 
-(defn has-creature? [dungeon loc]
-  (= ((:tile-contents dungeon) loc) :monster))
-
-(let [dungeon (read-dungeon [".M." "MM."])]
-  (t/fact
-   (has-creature? dungeon [0 0]) => falsey
-   (has-creature? dungeon [0 1]) => truthy
-   (has-creature? dungeon [1 1]) => truthy))
-
 (defn remove-creature [dungeon loc]
   (update-in dungeon
             [:tile-contents loc]
@@ -96,8 +99,19 @@
                 :floor
                 old-content))))
 
-(let [dungeon (read-dungeon ["M.#"])]
+(defn attack-creature [dungeon location]
+  (update-in dungeon
+             [:tile-contents location]
+             (fn [old-content]
+               (if (monster/monster? old-content)
+                 (let [monster (monster/attack-monster old-content)]
+                   (if (> (:hp monster) 0)
+                     monster
+                     :floor))
+                 old-content))))
+
+(let [dungeon (read-dungeon ["M.#"])
+      odungeon (read-dungeon ["m.#"])]
   (t/fact
-   (tile-at (remove-creature dungeon [0 0]) [0 0]) => :floor
-   (tile-at (remove-creature dungeon [0 2]) [0 2]) => :wall
-   (tile-at (remove-creature dungeon [0 1]) [0 1]) => :floor))
+   (tile-at (attack-creature dungeon [0 0]) [0 0]) => :monster
+   (tile-at (attack-creature odungeon [0 0]) [0 0]) => :floor))

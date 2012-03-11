@@ -82,11 +82,17 @@
              (fn [dungeon]
                (dungeon/remove-creature dungeon location))))
 
+(defn attack-creature [game-state location]
+  (update-in game-state
+             [:dungeon]
+             (fn [dungeon]
+               (dungeon/attack-creature dungeon location))))
+
 (defn move-player [game-state direction]
   (let [delta (direction directions)
         new-location (add-delta (player-location game-state) delta)]
     (if (has-creature? game-state new-location)
-      (kill-creature game-state new-location)
+      (attack-creature game-state new-location)
       (set-player-location game-state new-location))))
 
 (t/fact
@@ -131,6 +137,4 @@
   (t/fact
    (state->vec state) => ["#M@.#"])
   (t/fact
-   (state->vec (kill-creature state [0 1])) => ["#.@.#"])
-  (t/fact
-   (state->vec (move-player state :west)) => ["#.@.#"]))
+   (state->vec (move-player state :west)) => ["#M@.#"]))
