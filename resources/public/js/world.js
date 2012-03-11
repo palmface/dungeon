@@ -1,8 +1,9 @@
 
 var FLOOR = 1;
-var PLAYER = 2;
+var WALL = 2;
+var PLAYER = 3;
 var MONSTER = 4;
-var WALL = 8;
+var MONSTER2 = 5;
 
 function World(canvasWidth, canvasHeight) {
   this.canvasWidth = canvasWidth;
@@ -26,6 +27,11 @@ World.prototype.drawWall = function(ctx, x, y) {
 
 World.prototype.drawMonster = function(ctx, x, y) {
   ctx.fillStyle = "rgba(0, 200, 0, 0.5)";
+  ctx.fillRect (x, y, this.tileSize, this.tileSize);
+}
+
+World.prototype.drawMonster2 = function(ctx, x, y) {
+  ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
   ctx.fillRect (x, y, this.tileSize, this.tileSize);
 }
 
@@ -55,6 +61,8 @@ World.prototype.updateObject = function(o) {
     this.crawler.setPosition(o.x, o.y);
   } else if (o.type == "monster") {
     this.contents[i] = MONSTER;
+  } else if (o.type == "Monster") {
+    this.contents[i] = MONSTER2;
   } else if (o.type == "wall") {
     this.contents[i] = WALL;
   }
@@ -75,6 +83,8 @@ World.prototype.draw = function(canvas) {
         this.drawWall(ctx, drawX, drawY);
       } else if (this.contents[i] == MONSTER) {
         this.drawMonster(ctx, drawX, drawY);
+      } else if (this.contents[i] == MONSTER2) {
+        this.drawMonster2(ctx, drawX, drawY);
       }
     }
   }
