@@ -64,6 +64,7 @@
     (doto frame
       (.setContentPane canvas)
       (.pack)
+      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
       (.show))
     (.requestFocusInWindow canvas)
     frame))
