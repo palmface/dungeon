@@ -18,7 +18,7 @@
 
 (defmulti player-location type)
 
-(defmethod player-location Player [player]
+(defmethod player-location dungeon.player.Player [player]
   (get player :location))
 
 (t/fact
