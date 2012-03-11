@@ -15,8 +15,11 @@
     (make-game-state :dungeon dungeon
                      :player player)))
 
+(defn player [state]
+  (:player state))
+
 (defn player-location [state]
-  (player/player-location (get state :player)))
+  (player/player-location (player state)))
 
 (defn height [state]
   (get-in state [:dungeon :height]))
@@ -74,17 +77,18 @@
 (defn has-creature? [game-state location]
   (dungeon/has-monster? (:dungeon game-state) location))
 
-(defn attack-creature [game-state location]
+(defn attack-creature [game-state location damage]
   (update-in game-state
              [:dungeon]
              (fn [dungeon]
-               (dungeon/attack-creature dungeon location))))
+               (dungeon/attack-creature dungeon location damage))))
 
 (defn move-player [game-state direction]
-  (let [delta (direction directions)
+  (let [player (player game-state)
+        delta (direction directions)
         new-location (location/add-delta (player-location game-state) delta)]
     (if (has-creature? game-state new-location)
-      (attack-creature game-state new-location)
+      (attack-creature game-state new-location (player/damage player))
       (set-player-location game-state new-location))))
 
 (t/fact

@@ -78,12 +78,12 @@
  (dungeon->vec (read-dungeon [".#M." ".#MM"])) => [".#M." ".#MM"]
  (dungeon->vec (read-dungeon [".#@M."])) => [".#.M."])
 
-(defn attack-creature [dungeon location]
+(defn attack-creature [dungeon location damage]
   (if (has-monster? dungeon location)
     (update-in dungeon
                [:tile-contents location]
                (fn [monster]
-                 (let [hit-monster (monster/attack-monster monster)]
+                 (let [hit-monster (monster/attack-monster monster damage)]
                    (if (monster/dead? hit-monster)
                      :floor
                      hit-monster))))
@@ -92,5 +92,5 @@
 (let [dungeon (read-dungeon ["M.#"])
       odungeon (read-dungeon ["m.#"])]
   (t/fact
-   (tile-at (attack-creature dungeon [0 0]) [0 0]) => :Monster
-   (tile-at (attack-creature odungeon [0 0]) [0 0]) => :floor))
+   (tile-at (attack-creature dungeon [0 0] 1) [0 0]) => :Monster
+   (tile-at (attack-creature odungeon [0 0] 1) [0 0]) => :floor))
