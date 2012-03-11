@@ -19,10 +19,10 @@
   (player/player-location (get state :player)))
 
 (defn height [state]
-  (dungeon/height (:dungeon state)))
+  (get-in state [:dungeon :height]))
 
 (defn width [state]
-  (dungeon/width (:dungeon state)))
+  (get-in state [:dungeon :width]))
 
 (defn state->vec [state]
   (let [dungeon (dungeon/dungeon->vec (:dungeon state))]

@@ -27,12 +27,6 @@
                   :width width
                   :tile-contents tile-contents)))
 
-(defn height [dungeon]
-  (:height dungeon))
-
-(defn width [dungeon]
-  (:width dungeon))
-
 (defn has-creature? [dungeon loc]
   (monster/monster? ((:tile-contents dungeon) loc)))
 
@@ -65,9 +59,9 @@
 
 (defn dungeon->vec [dungeon]
   (vec
-   (for [row (range (height dungeon))]
+   (for [row (range (:height dungeon))]
      (apply str
-            (for [col (range (width dungeon))]
+            (for [col (range (:width dungeon))]
               (content-char (tile-at dungeon [row col])))))))
 
 (t/fact
@@ -87,10 +81,10 @@
 (let [dungeon13 (read-dungeon ["..."])
       dungeon23 (read-dungeon ["..." "..."])]
   (t/fact
-   (height dungeon13) => 1
-   (height dungeon23) => 2
-   (width dungeon13) => 3
-   (width dungeon23) => 3))
+   (:height dungeon13) => 1
+   (:height dungeon23) => 2
+   (:width dungeon13) => 3
+   (:width dungeon23) => 3))
 
 (defn remove-creature [dungeon loc]
   (update-in dungeon
