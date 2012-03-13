@@ -62,20 +62,17 @@
     dungeon))
 
 (let [dungeon (read-dungeon ["mi." "ii."])]
-  (t/fact
-   "pick-item picks items"
+  (t/fact "pick-item picks items"
    (has-item? (pick-item dungeon [0 0]) [0 0]) => t/falsey
    (has-item? (pick-item dungeon [0 1]) [0 1]) => t/falsey
    (has-item? (pick-item dungeon [1 1]) [1 0]) => t/truthy)
-  (t/fact
-   "pick-item does not pick anything else"
+  (t/fact "pick-item does not pick anything else"
    (has-monster? (pick-item dungeon [0 0]) [0 0]) => t/truthy))
 
 (defn tile-at [dungeon location]
   (if (has-monster? dungeon location)
     (:type ((:tile-contents dungeon) location))
     ((:tile-contents dungeon) location)))
-
 
 (let [dungeon (read-dungeon ["..."])
       odungeon (read-dungeon ["#M@mi"])]
@@ -107,7 +104,7 @@
  (dungeon->vec (read-dungeon [".#Mi" ".#MM"])) => [".#Mi" ".#MM"]
  (dungeon->vec (read-dungeon [".#@M."])) => [".#.M."])
 
-(defn attack-creature [dungeon location damage]
+(defn attack-monster [dungeon location damage]
   (if (has-monster? dungeon location)
     (update-in dungeon
                [:tile-contents location]
@@ -121,5 +118,5 @@
 (let [dungeon (read-dungeon ["M.#"])
       odungeon (read-dungeon ["m.#"])]
   (t/fact
-   (tile-at (attack-creature dungeon [0 0] 1) [0 0]) => :Monster
-   (tile-at (attack-creature odungeon [0 0] 1) [0 0]) => :floor))
+   (tile-at (attack-monster dungeon [0 0] 1) [0 0]) => :Monster
+   (tile-at (attack-monster odungeon [0 0] 1) [0 0]) => :floor))

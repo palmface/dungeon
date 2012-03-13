@@ -71,21 +71,21 @@
     (assoc-in game-state [:player :location] location)
     game-state))
 
-(defn has-creature? [game-state location]
+(defn has-monster? [game-state location]
   (dungeon/has-monster? (:dungeon game-state) location))
 
 (let [dungeon (read-game-state [".Mim@"])]
   (t/fact
-   (has-creature? dungeon [0 0]) => t/falsey
-   (has-creature? dungeon [0 1]) => t/truthy
-   (has-creature? dungeon [0 2]) => t/falsey
-   (has-creature? dungeon [0 3]) => t/truthy
-   (has-creature? dungeon [0 4]) => t/falsey))
+   (has-monster? dungeon [0 0]) => t/falsey
+   (has-monster? dungeon [0 1]) => t/truthy
+   (has-monster? dungeon [0 2]) => t/falsey
+   (has-monster? dungeon [0 3]) => t/truthy
+   (has-monster? dungeon [0 4]) => t/falsey))
 
-(defn attack-creature [game-state location damage]
+(defn attack-monster [game-state location damage]
   (update-in game-state
              [:dungeon]
-             dungeon/attack-creature
+             dungeon/attack-monster
              location
              damage))
 
@@ -94,17 +94,20 @@
                      location))
 
 (defn pick-item [game-state]
-  (update-in game-state
-             [:dungeon]
-             dungeon/pick-item
-             (player-location game-state)))
+  (let [item-picked (update-in game-state
+                               [:dungeon]
+                               dungeon/pick-item
+                               (player-location game-state))]
+    (update-in item-picked
+               [:player]
+               player/add-item)))
 
 (defn move-player [game-state direction]
   (let [player (player game-state)
         delta (direction directions)
         new-location (location/add-delta (player-location game-state) delta)]
-    (if (has-creature? game-state new-location)
-      (attack-creature game-state new-location (player/damage player))
+    (if (has-monster? game-state new-location)
+      (attack-monster game-state new-location (player/damage player))
       (set-player-location game-state new-location))))
 
 (let [dungeon (read-game-state [".i@"])]
@@ -160,3 +163,10 @@
    (state->vec state) => ["#M@.#"])
   (t/fact
    (state->vec (move-player state :west)) => ["#M@.#"]))
+
+(let [state (read-game-state ["M@i"])]
+  (t/fact "attack without item does not kill monster with 2 hp"
+          (has-monster? (move-player state :west) [0 0]) => t/truthy)
+  (t/fact "attack with item kills monster with 2 hp"
+          (let [state (move-player (pick-item (move-player state :east)) :west)]
+            (has-monster? (move-player state :west) [0 0]) => t/falsey)))

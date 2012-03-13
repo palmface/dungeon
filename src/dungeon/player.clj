@@ -20,16 +20,24 @@
 (defn location [player]
   (:location player))
 
-(defn damage [player]
-  (:damage player))
-
 (t/fact
  (location (read-player [".@."])) => [0 1]
  (location (read-player ["..." "@.."])) => [1 0]
  (location (read-player ["#@.." "...."])) => [0 1])
+
+(defn damage [player]
+  (:damage player))
 
 (t/fact "player has given damage"
   (damage (make-player :location [0 1] :damage 3)) => 3)
 
 (t/fact "default damage is 1"
   (damage (make-player :location [0 0])) => 1)
+
+(defn add-item [player]
+  (update-in player
+             [:damage]
+             inc))
+
+(t/fact "adding item increases damage by 1"
+        (damage (add-item (make-player :location [0 0]))) => 2)
