@@ -85,8 +85,9 @@
 (defn attack-creature [game-state location damage]
   (update-in game-state
              [:dungeon]
-             (fn [dungeon]
-               (dungeon/attack-creature dungeon location damage))))
+             dungeon/attack-creature
+             location
+             damage))
 
 (defn has-item? [game-state location]
   (dungeon/has-item? (:dungeon game-state)
@@ -95,9 +96,8 @@
 (defn pick-item [game-state]
   (update-in game-state
              [:dungeon]
-             (fn [dungeon]
-               (dungeon/pick-item dungeon
-                                  (player-location game-state)))))
+             dungeon/pick-item
+             (player-location game-state)))
 
 (defn move-player [game-state direction]
   (let [player (player game-state)
