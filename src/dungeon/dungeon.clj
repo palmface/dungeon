@@ -1,15 +1,36 @@
 (ns dungeon.dungeon
-  (:use [dungeon.utils :only [with-coordinates]])
+  (:use [dungeon.utils :only [with-coordinates]]
+        midje.sweet)
   (:require [dungeon.monster :as monster]
             [midje.sweet :as t]))
 
+(unfinished )
+
 (defrecord Dungeon [height width tile-contents])
 
-(def make-content {\# :wall
-                   \m (monster/make-monster :hp 1 :type :monster)
-                   \M (monster/make-monster :hp 2 :type :Monster)
-                   \i :item
-                   \. :floor})
+(defn make-content [& {:keys [base items monster]
+                       :or {base :floor
+                            items []
+                            monster nil}}]
+  {:base base
+   :items items
+   :monster monster})
+
+(fact
+  (make-content) => {:base :floor
+                     :items []
+                     :monster nil}
+  (make-content :base :wall) => {:base :wall
+                                 :items []
+                                 :monster nil})
+
+(def contents {\m (make-content
+                   :monster (monster/make-monster :hp 1 :type :monster))
+               \M (make-content
+                   :monster (monster/make-monster :hp 2 :type :Monster))
+               \i (make-content :items [:item])
+               \# (make-content :base :wall)
+               \. (make-content)})
 
 (defn make-dungeon [& {:keys [height width tile-contents]}]
   (Dungeon. height width tile-contents))
@@ -21,7 +42,7 @@
                        (fn [tile-contents [location content]]
                          (assoc tile-contents
                            location
-                           (make-content content :floor)))
+                           (contents content (make-content))))
                        {}
                        (with-coordinates dungeon-strings))]
     (make-dungeon :height height
@@ -30,14 +51,21 @@
 
 (let [dungeon13 (read-dungeon ["..."])
       dungeon23 (read-dungeon ["..." "..."])]
-  (t/fact
-   (:height dungeon13) => 1
-   (:height dungeon23) => 2
-   (:width dungeon13) => 3
-   (:width dungeon23) => 3))
+  (fact
+    (:height dungeon13) => 1
+    (:height dungeon23) => 2
+    (:width dungeon13) => 3
+    (:width dungeon23) => 3))
+
+(defn tile-at [dungeon location]
+  (get-in dungeon [:tile-contents location]))
+
+(fact
+  (tile-at (read-dungeon [".i"]) [0 0]) => (make-content)
+  (tile-at (read-dungeon [".i"]) [0 1]) => (make-content :items [:item]))
 
 (defn has-monster? [dungeon location]
-  (monster/monster? ((:tile-contents dungeon) location)))
+  (monster/monster? (:monster (tile-at dungeon location))))
 
 (let [dungeon (read-dungeon [".M." "MM."])]
   (t/fact
@@ -45,78 +73,79 @@
    (has-monster? dungeon [0 1]) => t/truthy
    (has-monster? dungeon [1 1]) => t/truthy))
 
-(defn has-item? [dungeon location]
-  (= :item (get-in dungeon [:tile-contents location])))
+(defn items [content]
+  (:items content))
 
-(let [dungeon (read-dungeon [".i." "ii."])]
-  (t/fact
-   (has-item? dungeon [0 0]) => t/falsey
-   (has-item? dungeon [0 1]) => t/truthy
-   (has-item? dungeon [1 1]) => t/truthy))
+(fact "tile can have a multiset of items"
+  (items (make-content :items [])) => []
+  (items (make-content :items [.item.])) => [.item.]
+  (items (make-content :items [.item. .item. .other-item.]))
+  => [.item. .item. .other-item.])
+
+(defn has-item? [dungeon location]
+  (not (empty? (items (tile-at dungeon location)))))
+
+(fact
+  (has-item? (read-dungeon [".i."]) [0 1]) => truthy
+  (has-item? (read-dungeon [".i."]) [0 0]) => falsey
+  (has-item? (read-dungeon [".M."]) [0 1]) => falsey)
 
 (defn pick-item [dungeon location]
   (if (has-item? dungeon location)
-    (assoc-in dungeon
-              [:tile-contents location]
-              :floor)
+    (update-in dungeon
+              [:tile-contents location :items]
+              pop)
     dungeon))
 
 (let [dungeon (read-dungeon ["mi." "ii."])]
-  (t/fact "pick-item picks items"
-   (has-item? (pick-item dungeon [0 0]) [0 0]) => t/falsey
-   (has-item? (pick-item dungeon [0 1]) [0 1]) => t/falsey
-   (has-item? (pick-item dungeon [1 1]) [1 0]) => t/truthy)
-  (t/fact "pick-item does not pick anything else"
-   (has-monster? (pick-item dungeon [0 0]) [0 0]) => t/truthy))
+  (fact "pick-item picks items"
+   (has-item? (pick-item dungeon [0 0]) [0 0]) => falsey
+   (has-item? (pick-item dungeon [0 1]) [0 1]) => falsey
+   (has-item? (pick-item dungeon [1 1]) [1 0]) => truthy)
+  (fact "pick-item does not pick anything else"
+   (has-monster? (pick-item dungeon [0 0]) [0 0]) => truthy))
 
-(defn tile-at [dungeon location]
+(defn attack-monster [dungeon location damage]
   (if (has-monster? dungeon location)
-    (:type ((:tile-contents dungeon) location))
-    ((:tile-contents dungeon) location)))
+    (update-in dungeon
+               [:tile-contents location :monster]
+               (fn [monster]
+                 (let [hit-monster (monster/attack-monster monster damage)]
+                   (if (not (monster/dead? hit-monster))
+                     hit-monster))))
+    dungeon))
 
-(let [dungeon (read-dungeon ["..."])
-      odungeon (read-dungeon ["#M@mi"])]
-  (t/fact
-   (tile-at dungeon [0 0]) => :floor
-   (tile-at dungeon [0 1]) => :floor
-   (tile-at dungeon [0 2]) => :floor)
-  (t/fact
-   (tile-at odungeon [0 0]) => :wall
-   (tile-at odungeon [0 1]) => :Monster
-   (tile-at odungeon [0 2]) => :floor
-   (tile-at odungeon [0 3]) => :monster
-   (tile-at odungeon [0 4]) => :item))
+(fact
+  (has-monster? (attack-monster (read-dungeon ["M."]) [0 0] 1) [0 0])
+  => truthy
+  (has-monster? (attack-monster (read-dungeon ["m."]) [0 0] 1) [0 0])
+  => falsey
+  (has-monster? (attack-monster (read-dungeon ["M."]) [0 0] 2) [0 0])
+  = falsey)
 
-(def content-char {:floor \.
-                   :item \i
-                   :wall \#
-                   :Monster \M
-                   :monster \m})
+(defn as-char [dungeon location]
+  (cond (has-monster? dungeon location)
+        ({:Monster \M
+          :monster \m} (get-in (tile-at dungeon location)
+                               [:monster :type]))
+        (has-item? dungeon location) \i
+        :else
+        ({:floor \.
+          :wall \#} (:base (tile-at dungeon location)))))
+
+(fact
+  (as-char (read-dungeon ["."]) [0 0]) => \.
+  (as-char (read-dungeon ["i"]) [0 0]) => \i
+  (as-char (read-dungeon ["m"]) [0 0]) => \m
+  (as-char (read-dungeon ["M"]) [0 0]) => \M)
 
 (defn dungeon->vec [dungeon]
   (vec
    (for [row (range (:height dungeon))]
      (apply str
             (for [col (range (:width dungeon))]
-              (content-char (tile-at dungeon [row col])))))))
+              (as-char dungeon [row col]))))))
 
 (t/fact
  (dungeon->vec (read-dungeon [".#Mi" ".#MM"])) => [".#Mi" ".#MM"]
  (dungeon->vec (read-dungeon [".#@M."])) => [".#.M."])
-
-(defn attack-monster [dungeon location damage]
-  (if (has-monster? dungeon location)
-    (update-in dungeon
-               [:tile-contents location]
-               (fn [monster]
-                 (let [hit-monster (monster/attack-monster monster damage)]
-                   (if (monster/dead? hit-monster)
-                     :floor
-                     hit-monster))))
-    dungeon))
-
-(let [dungeon (read-dungeon ["M.#"])
-      odungeon (read-dungeon ["m.#"])]
-  (t/fact
-   (tile-at (attack-monster dungeon [0 0] 1) [0 0]) => :Monster
-   (tile-at (attack-monster odungeon [0 0] 1) [0 0]) => :floor))
