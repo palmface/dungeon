@@ -1,8 +1,7 @@
 (ns dungeon.dungeon
   (:use [dungeon.utils :only [with-coordinates]]
         midje.sweet)
-  (:require [dungeon.monster :as monster]
-            [midje.sweet :as t]))
+  (:require [dungeon.monster :as monster]))
 
 (unfinished )
 
@@ -68,10 +67,10 @@
   (monster/monster? (:monster (tile-at dungeon location))))
 
 (let [dungeon (read-dungeon [".M." "MM."])]
-  (t/fact
-   (has-monster? dungeon [0 0]) => t/falsey
-   (has-monster? dungeon [0 1]) => t/truthy
-   (has-monster? dungeon [1 1]) => t/truthy))
+  (fact
+    (has-monster? dungeon [0 0]) => falsey
+    (has-monster? dungeon [0 1]) => truthy
+    (has-monster? dungeon [1 1]) => truthy))
 
 (defn items [content]
   (:items content))
@@ -93,17 +92,17 @@
 (defn pick-item [dungeon location]
   (if (has-item? dungeon location)
     (update-in dungeon
-              [:tile-contents location :items]
-              pop)
+               [:tile-contents location :items]
+               pop)
     dungeon))
 
 (let [dungeon (read-dungeon ["mi." "ii."])]
   (fact "pick-item picks items"
-   (has-item? (pick-item dungeon [0 0]) [0 0]) => falsey
-   (has-item? (pick-item dungeon [0 1]) [0 1]) => falsey
-   (has-item? (pick-item dungeon [1 1]) [1 0]) => truthy)
+    (has-item? (pick-item dungeon [0 0]) [0 0]) => falsey
+    (has-item? (pick-item dungeon [0 1]) [0 1]) => falsey
+    (has-item? (pick-item dungeon [1 1]) [1 0]) => truthy)
   (fact "pick-item does not pick anything else"
-   (has-monster? (pick-item dungeon [0 0]) [0 0]) => truthy))
+    (has-monster? (pick-item dungeon [0 0]) [0 0]) => truthy))
 
 (defn attack-monster [dungeon location damage]
   (if (has-monster? dungeon location)
@@ -146,6 +145,6 @@
             (for [col (range (:width dungeon))]
               (as-char dungeon [row col]))))))
 
-(t/fact
+(fact
  (dungeon->vec (read-dungeon [".#Mi" ".#MM"])) => [".#Mi" ".#MM"]
  (dungeon->vec (read-dungeon [".#@M."])) => [".#.M."])
