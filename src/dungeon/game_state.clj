@@ -47,17 +47,17 @@
   (state->vec (read-game-state ["i@m"])) => ["i@m"]
   (state->vec (read-game-state ["@.."])) => ["@.."])
 
+;FIXME uses the internal representation of tile-content
 (defn tile-at [state location]
   (let [content (dungeon/tile-at (:dungeon state) location)]
     (if (= (player-location state) location)
       (assoc content :player true)
       content)))
 
-(fact "tile at returns a map representation of the contents of the
-         tile in location. If player is standing in location, [:player
-         true] key-value pair is added to the map."
-  (tile-at (read-game-state ["..."]) [0 0]) => (dungeon/make-content)
-  (:player (tile-at (read-game-state [".@."]) [0 1])) => truthy)
+(fact "tile at returns the tile-content in location. [:player true] is
+      added to tile-content if the player is location"
+  (:player (tile-at (read-game-state ["."]) [0 0])) => falsey
+  (:player (tile-at (read-game-state ["@"]) [0 0])) => truthy)
 
 (defn- in-dungeon? [state location]
   (let [h (height state)
@@ -104,7 +104,7 @@
 (defn pick-item [game-state]
   (let [item-picked (update-in game-state
                                [:dungeon]
-                               dungeon/pick-item
+                               dungeon/remove-item
                                (player-location game-state))]
     (update-in item-picked
                [:player]
@@ -141,10 +141,10 @@
     (player-location (move-player state :west)) => [0 0]
     (player-location (move-player state :north)) => [0 1]))
 
-(let [dungeon (move-player (read-game-state ["i@"]) :west)]
+(let [state (move-player (read-game-state ["i@"]) :west)]
   (fact
-    (has-item? dungeon [0 0]) => truthy
-    (has-item? (pick-item dungeon) [0 0]) => falsey))
+    (has-item? state [0 0]) => truthy
+    (has-item? (pick-item state) [0 0]) => falsey))
 
 (let [state (read-game-state ["M@i"])]
   (fact "attack without item does not kill monster with 2 hp"

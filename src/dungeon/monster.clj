@@ -1,10 +1,10 @@
 (ns dungeon.monster
   (:require [midje.sweet :as t]))
 
-(defrecord Monster [hp type])
+(defrecord Monster [hp kind])
 
-(defn make-monster [& {:keys [hp type]}]
-  (Monster. hp type))
+(defn make-monster [& {:keys [hp kind]}]
+  (Monster. hp kind))
 
 (defn monster? [monster]
   (= (type monster) Monster))
@@ -14,6 +14,9 @@
 
 (defn set-hp [monster new-hp]
   (assoc monster :hp new-hp))
+
+(defn kind [monster]
+  (:kind monster))
 
 (defn dead? [monster]
   (<= (hp monster) 0))
