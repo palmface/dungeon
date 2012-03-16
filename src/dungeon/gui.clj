@@ -1,11 +1,13 @@
 (ns dungeon.gui
-  (:require [dungeon.game-state :as gs])
+  (:require [dungeon.game-state :as gs]
+            [dungeon.tile-content :as tc]
+            [dungeon.monster :as m])
   (:import [javax.swing JFrame JPanel SwingUtilities]
            [java.awt Graphics Color Dimension]
            [java.awt.event KeyEvent KeyListener]))
 
-(def cell-width 15)
-(def cell-height 15)
+(def cell-width 10)
+(def cell-height 10)
 
 (def color-for {:player Color/red
                 :floor  Color/gray
@@ -14,16 +16,69 @@
                 :monster Color/green
                 :Monster Color/yellow})
 
-(defn- draw-tile [[row col :as location] dungeon-state graphics]
+(defn- set-color [color graphics]
   (doto graphics
-    (.setColor (color-for (gs/tile-at dungeon-state location)))
-    (.fillRect (* col cell-width) (* row cell-height)
-               cell-width         cell-height)))
+    (.setColor color)))
+
+(defn- fill-rect [[x y] with height graphics]
+  (doto graphics
+    (.fillRect x y with height)))
+
+(defn- draw-base [[x y] tile-content graphics]
+  ((comp (partial fill-rect
+                  [(* x cell-width)
+                   (* y cell-height)]
+                  cell-width cell-height)
+         (partial set-color
+                  (color-for (tc/base tile-content))))
+   graphics))
+
+(defn- draw-items [[x y] tile-content graphics]
+  (if (tc/has-items? tile-content)
+    ((comp (partial fill-rect
+                    [(+ (* x cell-width)
+                        (int (/ cell-width 4)))
+                     (+ (* y cell-height)
+                        (int (/ cell-height 4)))]
+                    (int (/ cell-width 2))
+                    (int (/ cell-height 2)))
+           (partial set-color
+                    (color-for :item)))
+     graphics)
+    graphics))
+
+(defn- draw-monster [[x y] tile-content graphics]
+  (if (tc/has-monster? tile-content)
+    ((comp (partial fill-rect
+                    [(* x cell-width)
+                     (* y cell-height)]
+                    cell-width cell-height)
+           (partial set-color
+                    (color-for (m/kind (tc/monster tile-content)))))
+     graphics)
+    graphics))
+
+(defn- draw-tile [graphics [x y :as location] tile-content]
+  ((comp (partial draw-monster location tile-content)
+         (partial draw-items location tile-content)
+         (partial draw-base location tile-content))
+   graphics))
+
+(defn- draw-player [dungeon-state graphics]
+  (let [[y x] (gs/player-location dungeon-state)]
+    ((comp (partial fill-rect
+                    [(* x cell-width)
+                     (* y cell-height)]
+                    cell-width cell-height)
+           (partial set-color
+                    (color-for :player)))
+     graphics)))
 
 (defn- draw-state [dungeon-state graphics]
   (doseq [row (range (gs/height dungeon-state))
           col (range (gs/width dungeon-state))]
-    (draw-tile [row col] dungeon-state graphics)))
+    (draw-tile graphics [col row] (gs/tile-at dungeon-state [row col])))
+  (draw-player dungeon-state graphics))
 
 (defn move [direction]
   (fn [dungeon-state]
@@ -40,7 +95,7 @@
   (proxy [JPanel KeyListener] []
     (paintComponent [graphics]
       (do (proxy-super paintComponent graphics)
-        (draw-state @dungeon-state graphics)))
+          (draw-state @dungeon-state graphics)))
     (getPreferredSize [] 
       (Dimension. (* cell-width (gs/width @dungeon-state))
                   (* cell-height (gs/height @dungeon-state))))
