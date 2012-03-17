@@ -31,7 +31,7 @@
 (defn width [state]
   (get-in state [:dungeon :width]))
 
-(defn state->vec [state]
+(defn- state->vec [state]
   (let [dungeon (dungeon/dungeon->vec (:dungeon state))]
     (if-let [location (player-location state)]
       (update-in dungeon
@@ -54,8 +54,9 @@
       (assoc content :player true)
       content)))
 
-(fact "tile at returns the tile-content in location. [:player true] is
-      added to tile-content if the player is location"
+(fact "tile at returns the tile-content in location. Key-value pair
+      [:player true] is added to tile-content if the player is
+      in location"
   (:player (tile-at (read-game-state ["."]) [0 0])) => falsey
   (:player (tile-at (read-game-state ["@"]) [0 0])) => truthy)
 
@@ -86,7 +87,7 @@
     (has-monster? dungeon [0 3]) => truthy
     (has-monster? dungeon [0 4]) => falsey))
 
-(defn attack-monster [game-state location damage]
+(defn- attack-monster [game-state location damage]
   (update-in game-state
              [:dungeon]
              dungeon/attack-monster
@@ -102,13 +103,16 @@
   (has-item? (read-game-state ["i."]) [0 1]) => falsey)
 
 (defn pick-item [game-state]
-  (let [item-picked (update-in game-state
+  (let [item (dungeon/top-item (:dungeon game-state)
+                               (player-location game-state))
+        item-picked (update-in game-state
                                [:dungeon]
                                dungeon/remove-item
                                (player-location game-state))]
     (update-in item-picked
                [:player]
-               player/add-item)))
+               player/add-item
+               item)))
 
 (def walkable-base? {:floor true})
 
@@ -145,6 +149,12 @@
   (fact
     (has-item? state [0 0]) => truthy
     (has-item? (pick-item state) [0 0]) => falsey))
+
+(let [state (move-player (read-game-state ["i@"])
+                         :west)]
+  (fact
+    (player/inventory (player state)) => empty?
+    (player/inventory (player (pick-item state))) =not=> empty?))
 
 (let [state (read-game-state ["M@i"])]
   (fact "attack without item does not kill monster with 2 hp"

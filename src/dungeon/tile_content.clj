@@ -35,6 +35,13 @@
   (items (make-tile-content :items [...item... ...item... ...other-item...]))
   => [...item... ...item... ...other-item...])
 
+(defn top-item [content]
+  (peek (items content)))
+
+(fact
+  (top-item (make-tile-content)) => nil
+  (top-item (make-tile-content :items [.item. .top-item.])) => .top-item.)
+
 (defn remove-top-item [content]
   (if (has-items? content)
     (let [new-items (pop (:items content))]

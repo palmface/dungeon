@@ -16,69 +16,62 @@
                 :monster Color/green
                 :Monster Color/yellow})
 
-(defn- set-color [color graphics]
+(defn- set-color [graphics color]
   (doto graphics
     (.setColor color)))
 
-(defn- fill-rect [[x y] with height graphics]
+(defn- fill-rect [graphics [x y] with height]
   (doto graphics
     (.fillRect x y with height)))
 
-(defn- draw-base [[x y] tile-content graphics]
-  ((comp (partial fill-rect
-                  [(* x cell-width)
-                   (* y cell-height)]
-                  cell-width cell-height)
-         (partial set-color
-                  (color-for (tc/base tile-content))))
-   graphics))
+(defn- draw-base [graphics [x y] tile-content]
+  (doto graphics
+    (set-color (color-for (tc/base tile-content)))
+    (fill-rect [(* x cell-width)
+                (* y cell-height)]
+               cell-width
+               cell-height)))
 
-(defn- draw-items [[x y] tile-content graphics]
+(defn- draw-items [graphics [x y] tile-content]
   (if (tc/has-items? tile-content)
-    ((comp (partial fill-rect
-                    [(+ (* x cell-width)
-                        (int (/ cell-width 4)))
-                     (+ (* y cell-height)
-                        (int (/ cell-height 4)))]
-                    (int (/ cell-width 2))
-                    (int (/ cell-height 2)))
-           (partial set-color
-                    (color-for :item)))
-     graphics)
+    (doto graphics
+      (set-color (color-for :item))
+      (fill-rect [(+ (* x cell-width)
+                     (int (/ cell-width 4)))
+                  (+ (* y cell-height)
+                     (int (/ cell-height 4)))]
+                 (int (/ cell-width 2))
+                 (int (/ cell-height 2))))
     graphics))
 
-(defn- draw-monster [[x y] tile-content graphics]
+(defn- draw-monster [graphics [x y] tile-content]
   (if (tc/has-monster? tile-content)
-    ((comp (partial fill-rect
-                    [(* x cell-width)
-                     (* y cell-height)]
-                    cell-width cell-height)
-           (partial set-color
-                    (color-for (m/kind (tc/monster tile-content)))))
-     graphics)
+    (doto graphics
+      (set-color (color-for (m/kind (tc/monster tile-content))))
+      (fill-rect [(* x cell-width)
+                  (* y cell-height)]
+                 cell-width cell-height))
     graphics))
 
 (defn- draw-tile [graphics [x y :as location] tile-content]
-  ((comp (partial draw-monster location tile-content)
-         (partial draw-items location tile-content)
-         (partial draw-base location tile-content))
-   graphics))
+  (doto graphics
+    (draw-base location tile-content)
+    (draw-items location tile-content)
+    (draw-monster location tile-content)))
 
-(defn- draw-player [dungeon-state graphics]
+(defn- draw-player [graphics dungeon-state]
   (let [[y x] (gs/player-location dungeon-state)]
-    ((comp (partial fill-rect
-                    [(* x cell-width)
-                     (* y cell-height)]
-                    cell-width cell-height)
-           (partial set-color
-                    (color-for :player)))
-     graphics)))
+    (doto graphics
+      (set-color (color-for :player))
+      (fill-rect [(* x cell-width)
+                  (* y cell-height)]
+                 cell-width cell-height))))
 
 (defn- draw-state [dungeon-state graphics]
   (doseq [row (range (gs/height dungeon-state))
           col (range (gs/width dungeon-state))]
     (draw-tile graphics [col row] (gs/tile-at dungeon-state [row col])))
-  (draw-player dungeon-state graphics))
+  (draw-player graphics dungeon-state))
 
 (defn move [direction]
   (fn [dungeon-state]

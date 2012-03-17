@@ -63,6 +63,15 @@
   (has-item? (read-dungeon [".i."]) [0 0]) => falsey
   (has-item? (read-dungeon [".M."]) [0 1]) => falsey)
 
+(defn top-item [dungeon location]
+  (content/top-item (get-in dungeon
+                            [:tile-contents
+                             location])))
+
+(fact
+  (top-item (read-dungeon ["."]) [0 0]) => nil
+  (top-item (read-dungeon ["i"]) [0 0]) =not=> nil)
+
 (defn remove-item [dungeon location]
   (update-in dungeon
              [:tile-contents location]
