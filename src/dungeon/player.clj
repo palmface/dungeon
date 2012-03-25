@@ -35,6 +35,9 @@
 (fact "default damage is 1"
   (damage (make-player :location [0 0])) => 1)
 
+(defn inventory [player]
+  (:inventory player))
+
 (defn add-item [player item]
   (-> player
       (update-in [:inventory]
@@ -51,9 +54,6 @@
 
 (fact "adding item increases damage by 1"
   (damage (add-item (make-player :location [0 0]) .item.)) => 2)
-
-(defn inventory [player]
-  (:inventory player))
 
 (fact
   (inventory (make-player :location [.x. .y.])) => empty?

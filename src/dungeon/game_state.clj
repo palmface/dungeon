@@ -21,6 +21,9 @@
 (defn player-location [state]
   (player/location (:player state)))
 
+(defn player-inventory [state]
+  (player/inventory (player state)))
+
 (fact
   (player-location (read-game-state ["..." ".@."])) => [1 1]
   (player-location (read-game-state [".@."])) => [0 1])
