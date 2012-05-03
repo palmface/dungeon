@@ -15,7 +15,7 @@
                \. (content/make-tile-content)})
 
 (defn make-dungeon [& {:keys [height width tile-contents]}]
-  (Dungeon. height width tile-contents))
+  (->Dungeon height width tile-contents))
 
 (defn read-dungeon [dungeon-strings]
   (let [height (count dungeon-strings)
@@ -47,7 +47,7 @@
   (tile-at (read-dungeon [".i"]) [0 1]) => (content/make-tile-content :items [:item]))
 
 (defn has-monster? [dungeon location]
-  (content/has-monster? (tile-at dungeon location)))
+  (:monster (tile-at dungeon location)))
 
 (let [dungeon (read-dungeon [".M." "MM."])]
   (fact
@@ -56,7 +56,7 @@
     (has-monster? dungeon [1 1]) => truthy))
 
 (defn has-item? [dungeon location]
-  (content/has-items? (tile-at dungeon location)))
+  (:items (tile-at dungeon location)))
 
 (fact
   (has-item? (read-dungeon [".i."]) [0 1]) => truthy
@@ -86,16 +86,11 @@
     (has-monster? (remove-item dungeon [0 0]) [0 0]) => truthy))
 
 (defn attack-monster [dungeon location damage]
-  (if (has-monster? dungeon location)
-    (update-in dungeon
-               [:tile-contents location]
-               (fn [content]
-                 (let [monster (content/monster content)
-                       hit-monster (monster/attack-monster monster damage)]
-                   (if (monster/dead? hit-monster)
-                     (content/remove-monster content)
-                     (content/set-monster hit-monster content)))))
-    dungeon))
+  (update-in dungeon
+             [:tile-contents location :monster]
+             (fn [monster]
+               (when monster
+                 (monster/attack-monster monster damage)))))
 
 (fact
   (has-monster? (attack-monster (read-dungeon ["M."]) [0 0] 1) [0 0])
@@ -109,11 +104,11 @@
   (cond (has-monster? dungeon location)
         (let [tile (tile-at dungeon location)]
           ({:Monster \M
-            :monster \m} (monster/kind (content/monster tile))))
+            :monster \m} (:kind (:monster tile))))
         (has-item? dungeon location) \i
         :else
         ({:floor \.
-          :wall \#} (content/base (tile-at dungeon location)))))
+          :wall \#} (:base (tile-at dungeon location)))))
 
 (fact
   (as-char (read-dungeon ["."]) [0 0]) => \.

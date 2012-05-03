@@ -7,7 +7,7 @@
 (defrecord GameState [dungeon player])
 
 (defn make-game-state [& {:keys [dungeon player]}]
-  (GameState. dungeon player))
+  (->GameState dungeon player))
 
 (defn read-game-state [dungeon-strings]
   (let [dungeon (dungeon/read-dungeon dungeon-strings)
@@ -19,10 +19,10 @@
   (:player state))
 
 (defn player-location [state]
-  (player/location (:player state)))
+  (:location (:player state)))
 
 (defn player-inventory [state]
-  (player/inventory (player state)))
+  (:inventory (player state)))
 
 (fact
   (player-location (read-game-state ["..." ".@."])) => [1 1]
@@ -134,7 +134,7 @@
         delta (direction directions)
         new-location (location/add-delta (player-location game-state) delta)]
     (if (has-monster? game-state new-location)
-      (attack-monster game-state new-location (player/damage player))
+      (attack-monster game-state new-location (:damage player))
       (set-player-location game-state new-location))))
 
 (let [dungeon (read-game-state [".i@"])]
@@ -156,8 +156,8 @@
 (let [state (move-player (read-game-state ["i@"])
                          :west)]
   (fact
-    (player/inventory (player state)) => empty?
-    (player/inventory (player (pick-item state))) =not=> empty?))
+    (:inventory (player state)) => empty?
+    (:inventory (player (pick-item state))) =not=> empty?))
 
 (let [state (read-game-state ["M@i"])]
   (fact "attack without item does not kill monster with 2 hp"
